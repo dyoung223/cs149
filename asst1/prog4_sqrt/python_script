@@ -1,0 +1,21 @@
+import subprocess
+import numpy as np
+# Path to your C++ executable
+cpp_executable = './sqrt'  # Replace with the actual path
+
+# Define the list of values for 'values[i]'
+value_list = np.arange(1.000, 2.999, 0.100)  # Add more values as needed
+
+for value in value_list:
+    # Compile and run the C++ program with the current value as a command-line argument
+    command = [cpp_executable, str(value)]
+
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(f"Value: {value}, Output: {result.stdout}")
+        else:
+            print(f"Value: {value}, Error: {result.stderr}")
+    except Exception as e:
+        print(f"Error running C++ program: {str(e)}")
+

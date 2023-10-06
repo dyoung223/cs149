@@ -1,0 +1,120 @@
+Value: 1.0, Output: [sqrt serial]:		[19.324] ms
+[sqrt ispc]:		[8.686] ms
+[sqrt task ispc]:	[7.837] ms
+				(2.22x speedup from ISPC)
+				(2.47x speedup from task ISPC)
+
+Value: 1.1, Output: [sqrt serial]:		[111.641] ms
+[sqrt ispc]:		[25.193] ms
+[sqrt task ispc]:	[7.796] ms
+				(4.43x speedup from ISPC)
+				(14.32x speedup from task ISPC)
+
+Value: 1.2000000000000002, Output: [sqrt serial]:		[111.114] ms
+[sqrt ispc]:		[24.675] ms
+[sqrt task ispc]:	[7.841] ms
+				(4.50x speedup from ISPC)
+				(14.17x speedup from task ISPC)
+
+Value: 1.3000000000000003, Output: [sqrt serial]:		[111.387] ms
+[sqrt ispc]:		[25.229] ms
+[sqrt task ispc]:	[7.894] ms
+				(4.42x speedup from ISPC)
+				(14.11x speedup from task ISPC)
+
+Value: 1.4000000000000004, Output: [sqrt serial]:		[160.505] ms
+[sqrt ispc]:		[34.248] ms
+[sqrt task ispc]:	[7.892] ms
+				(4.69x speedup from ISPC)
+				(20.34x speedup from task ISPC)
+
+Value: 1.5000000000000004, Output: [sqrt serial]:		[160.489] ms
+[sqrt ispc]:		[34.258] ms
+[sqrt task ispc]:	[7.895] ms
+				(4.68x speedup from ISPC)
+				(20.33x speedup from task ISPC)
+
+Value: 1.6000000000000005, Output: [sqrt serial]:		[159.834] ms
+[sqrt ispc]:		[34.272] ms
+[sqrt task ispc]:	[7.912] ms
+				(4.66x speedup from ISPC)
+				(20.20x speedup from task ISPC)
+
+Value: 1.7000000000000006, Output: [sqrt serial]:		[160.558] ms
+[sqrt ispc]:		[34.291] ms
+[sqrt task ispc]:	[7.883] ms
+				(4.68x speedup from ISPC)
+				(20.37x speedup from task ISPC)
+
+Value: 1.8000000000000007, Output: [sqrt serial]:		[218.513] ms
+[sqrt ispc]:		[43.781] ms
+[sqrt task ispc]:	[8.606] ms
+				(4.99x speedup from ISPC)
+				(25.39x speedup from task ISPC)
+
+Value: 1.9000000000000008, Output: [sqrt serial]:		[218.651] ms
+[sqrt ispc]:		[43.455] ms
+[sqrt task ispc]:	[8.641] ms
+				(5.03x speedup from ISPC)
+				(25.30x speedup from task ISPC)
+
+Value: 2.000000000000001, Output: [sqrt serial]:		[218.602] ms
+[sqrt ispc]:		[43.802] ms
+[sqrt task ispc]:	[8.594] ms
+				(4.99x speedup from ISPC)
+				(25.44x speedup from task ISPC)
+
+Value: 2.100000000000001, Output: [sqrt serial]:		[282.252] ms
+[sqrt ispc]:		[55.178] ms
+[sqrt task ispc]:	[10.199] ms
+				(5.12x speedup from ISPC)
+				(27.67x speedup from task ISPC)
+
+Value: 2.200000000000001, Output: [sqrt serial]:		[282.236] ms
+[sqrt ispc]:		[55.214] ms
+[sqrt task ispc]:	[10.227] ms
+				(5.11x speedup from ISPC)
+				(27.60x speedup from task ISPC)
+
+Value: 2.300000000000001, Output: [sqrt serial]:		[282.227] ms
+[sqrt ispc]:		[55.190] ms
+[sqrt task ispc]:	[10.218] ms
+				(5.11x speedup from ISPC)
+				(27.62x speedup from task ISPC)
+
+Value: 2.4000000000000012, Output: [sqrt serial]:		[343.988] ms
+[sqrt ispc]:		[67.704] ms
+[sqrt task ispc]:	[11.928] ms
+				(5.08x speedup from ISPC)
+				(28.84x speedup from task ISPC)
+
+Value: 2.5000000000000013, Output: [sqrt serial]:		[343.650] ms
+[sqrt ispc]:		[67.747] ms
+[sqrt task ispc]:	[11.925] ms
+				(5.07x speedup from ISPC)
+				(28.82x speedup from task ISPC)
+
+Value: 2.6000000000000014, Output: [sqrt serial]:		[406.010] ms
+[sqrt ispc]:		[80.239] ms
+[sqrt task ispc]:	[13.617] ms
+				(5.06x speedup from ISPC)
+				(29.82x speedup from task ISPC)
+
+Value: 2.7000000000000015, Output: [sqrt serial]:		[406.178] ms
+[sqrt ispc]:		[80.254] ms
+[sqrt task ispc]:	[13.641] ms
+				(5.06x speedup from ISPC)
+				(29.78x speedup from task ISPC)
+
+Value: 2.8000000000000016, Output: [sqrt serial]:		[469.516] ms
+[sqrt ispc]:		[92.483] ms
+[sqrt task ispc]:	[15.365] ms
+				(5.08x speedup from ISPC)
+				(30.56x speedup from task ISPC)
+
+Value: 2.9000000000000017, Output: [sqrt serial]:		[633.911] ms
+[sqrt ispc]:		[116.754] ms
+[sqrt task ispc]:	[18.819] ms
+				(5.43x speedup from ISPC)
+				(33.69x speedup from task ISPC)
+

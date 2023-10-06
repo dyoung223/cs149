@@ -18,6 +18,8 @@ typedef struct {
   int *clusterAssignments;
   double *currCost;
   int M, N, K;
+  int mstart;
+  int threadID;
 } WorkerArgs;
 
 
@@ -64,7 +66,60 @@ double dist(double *x, double *y, int nDim) {
 /**
  * Assigns each data point to its "closest" cluster centroid.
  */
-void computeAssignments(WorkerArgs *const args) {
+
+void computeAssignmentsThreadStart(WorkerArgs *const args){
+  double *minDist = new double[args->M];
+  
+  // Initialize arrays
+  for (int m =0; m < args->M; m++) {
+    minDist[m] = 1e30;
+    args->clusterAssignments[((args -> mstart) + m)] = -1;
+  }
+
+  // Assign datapoints to closest centroids
+  for (int m = 0; m < args->M; m++) {
+  for (int k = args->start; k < args->end; k++) {
+      //printf("%d, %d, %d \n", args -> threadID, args -> mstart, args -> M); 
+      double d = dist(&args->data[((args -> mstart) + m) * args->N],
+                      &args->clusterCentroids[k * args->N], args->N);
+      if (d < minDist[m]) {
+        minDist[m] = d;
+        args->clusterAssignments[((args -> mstart) + m)] = k;
+      }
+    }
+  }
+
+  free(minDist);
+}
+
+void computeAssignments(WorkerArgs *const args){
+  int numThreads = 8;
+  std::thread workers[numThreads];
+  WorkerArgs args_thread[numThreads];
+  for(int i = 0; i < numThreads; i++){
+    args_thread[i].start = args->start;
+    args_thread[i].end = args->end;
+    args_thread[i].data = args->data;
+    args_thread[i].clusterCentroids = args->clusterCentroids;
+    args_thread[i].clusterAssignments = args->clusterAssignments;
+    args_thread[i].currCost = args->currCost;
+    args_thread[i].M = (args->M)/numThreads;
+    args_thread[i].N = args->N;
+    args_thread[i].K = args->K;
+    args_thread[i].mstart = i*(args->M)/numThreads;
+    args_thread[i].threadID = i;
+  }
+  for(int i = 1; i < numThreads; i++){
+    workers[i] = std::thread(computeAssignmentsThreadStart, &args_thread[i]);
+  }
+  computeAssignmentsThreadStart(&args_thread[0]);
+  for(int i = 1; i < numThreads; i++){
+    workers[i].join();
+  }  
+}
+
+
+/*void computeAssignments(WorkerArgs *const args) {
   double *minDist = new double[args->M];
   
   // Initialize arrays
@@ -86,7 +141,7 @@ void computeAssignments(WorkerArgs *const args) {
   }
 
   free(minDist);
-}
+} */
 
 /**
  * Given the cluster assignments, computes the new centroid locations for
