@@ -12,7 +12,6 @@ typedef struct {
     int* output;
     int threadId;
     int numThreads;
-    unsigned int currentRow;
 } WorkerArgs;
 
 
@@ -36,19 +35,34 @@ void workerThreadStart(WorkerArgs * const args) {
     // program that uses two threads, thread 0 could compute the top
     // half of the image and thread 1 could compute the bottom half.
 
-    //clock_t start = clock();
-    //double startTime = CycleTimer::currentSeconds();
-    while(args->threadId + args->numThreads*args->currentRow < args->height){
-    	mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, args->threadId + args->numThreads*args->currentRow, 1, args->maxIterations, args->output );
-	args->currentRow++;
-    }
-    //mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, 0, args->height, args->maxIterations, args->output);
+    printf("Hello world from thread %d\n", args->threadId);
+    float dx = (args -> x1 - args -> x0) / args -> width;
+    float dy = (args -> y1 - args -> y0) / args -> height;
+    float z_re = c_re, z_im = c_im;
+    int i;
 
-    //printf("Hello world from thread %d, x0: %f, y0: %f, x1: %f, y1: %f, width: %d, height: %d, startRow: %d, numRows: %d, maxIter: %d\n", args->threadId, args->x0, args->y0, args->x1, args->y1, args->width, args->height, args->threadId*args->height/args->numThreads, args->height/args->numThreads, args->maxIterations);
-    //clock_t end = clock();
-    //double endTime = CycleTimer::currentSeconds();
-    //double cpu_time_used =  endTime - startTime;
-    //printf("Thread: %d, program runtime: %f sec\n", args->threadId, cpu_time_used);
+    for (int j = 0; j < args -> height; j++) {
+        for (int i = 0; i < args -> width; ++i) {
+            float x = args -> x0 + i * dx;
+            float y = args -> y0 + j * dy;
+
+            int index = ((args -> threadId + j) * args -> width + i);
+
+            
+    for (i = 0; i < count; ++i) {
+
+        if (z_re * z_re + z_im * z_im > 4.f)
+            break;
+
+        float new_re = z_re*z_re - z_im*z_im;
+        float new_im = 2.f * z_re * z_im;
+        z_re = c_re + new_re;
+        z_im = c_im + new_im;
+    }
+
+            (args -> output)[index] = mandel(x, y, maxIterations);
+        }
+    }
 }
 
 //
@@ -79,32 +93,17 @@ void mandelbrotThread(
         // TODO FOR CS149 STUDENTS: You may or may not wish to modify
         // the per-thread arguments here.  The code below copies the
         // same arguments for each thread
-	/*
         args[i].x0 = x0;
-        args[i].y0 = y0;
+        args[i].y0 = y0 + i*(height/numThreads);
         args[i].x1 = x1;
-        args[i].y1 = y1;
+        args[i].y1 = args[i].y0 + (height/numThreads);
         args[i].width = width;
-        args[i].height = height;
-        args[i].maxIterations = maxIterations;
-        args[i].numthreads = numthreads;
-        args[i].output = output;
-      
-        args[i].threadId = i;
-    	*/
-	args[i].x0 = x0;
-        args[i].y0 = y0; //y0+(dy*i*tempHeight);
-        args[i].x1 = x1;
-        args[i].y1 = y1; //y0+(dy*(i+1)*tempHeight);
-        args[i].width = width;
-        args[i].height = height; //tempHeight;
+        args[i].height = height/numThreads;
         args[i].maxIterations = maxIterations;
         args[i].numThreads = numThreads;
         args[i].output = output;
-      	args[i].currentRow = 0;
+      
         args[i].threadId = i;
-
-
     }
 
     // Spawn the worker threads.  Note that only numThreads-1 std::threads
