@@ -47,7 +47,7 @@ __global__ void upsweep_phase(int two_dplus1, int two_d, int N, int* result){
 
     int index = two_dplus1*(blockIdx.x * blockDim.x + threadIdx.x);
     int taskOutputIndex = index + two_dplus1 - 1;
-    int taskInputIndex = index + two_dplus - 1; 
+    int taskInputIndex = index + two_d - 1; 
     if(taskOutputIndex < N && taskInputIndex < N){
         result[taskOutputIndex] += result[taskInputIndex];
     }
@@ -58,7 +58,7 @@ __global__ void downsweep_phase(int two_dplus1, int two_d, int N, int* result){
     int index = two_dplus1*(blockIdx.x * blockDim.x + threadIdx.x);
     
     int taskOutputIndex = index + two_dplus1 - 1;
-    int taskInputIndex = index + two_dplus - 1; 
+    int taskInputIndex = index + two_d - 1; 
     if(taskOutputIndex < N && taskInputIndex < N){
         int t = result[taskInputIndex];
         result[taskInputIndex] = result[taskOutputIndex];
@@ -78,7 +78,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     int rounded_length = nextPow2(N);
-    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    //const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // There is a case where you need to combine blocks information and don't need all the blocks turned on 
     /*
     if(N >= 256){
@@ -107,7 +107,7 @@ void exclusive_scan(int* input, int N, int* result)
         two_dplus1 = 2*two_d;
         num_ops /= 2;
      }
-     while(num_ops > 0}{
+     while(num_ops > 0){
         int num_threads = num_ops;
         upsweep_phase<<<1, num_threads>>>(two_dplus1, two_d, rounded_length, result);
         two_d *= 2;
@@ -122,21 +122,21 @@ void exclusive_scan(int* input, int N, int* result)
     //cudaMemcpy(device_result, resultarray, N * sizeof(int), cudaMemcpyDeviceToHost);
 
     //cudaMemSet
-    cudaMemset(device_result+(rounded_length-1)*sizeof(int), 0, sizeof(int));  
+    cudaMemset(result+(rounded_length-1)*sizeof(int), 0, sizeof(int));  
 
     two_d = rounded_length/2;
     two_dplus1 = 2*two_d;
     num_ops = 1;
     
     while(num_ops < THREADS_PER_BLOCK){
-        num_threads = num_ops;
+        int num_threads = num_ops;
         downsweep_phase<<<1, num_threads>>>(two_dplus1, two_d, rounded_length, result);
         two_d /= 2;
         two_dplus1 = 2*two_d;
         num_ops *= 2;
     }
     while(two_d >= 1){
-        num_blocks = num_ops/THREADS_PER_BLOCK;
+        int num_blocks = num_ops/THREADS_PER_BLOCK;
         downsweep_phase<<<num_blocks, THREADS_PER_BLOCK>>>(two_dplus1, two_d, rounded_length, result);
 
     }
@@ -249,7 +249,7 @@ __global__ void assign_index(int* scan, int* mask, int N, int* output){
         }
     }
 }
-_
+
 
 // find_repeats --
 //
@@ -273,13 +273,17 @@ int find_repeats(int* device_input, int length, int* device_output) {
     int rounded_length = nextPow2(length);
     int *mask;
     int *scan;
-    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    const int blocks = (rounded_length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+
+    cudaMalloc((void **)&mask, sizeof(int) * rounded_length);
+    cudaMalloc((void **)&scan, sizeof(int) * rounded_length);
 
     if (rounded_length < THREADS_PER_BLOCK){
         create_mask<<<1, rounded_length>>>(device_input, rounded_length, mask);
         exclusive_scan(mask, rounded_length, scan);
         assign_index<<<1, rounded_length>>>(scan, mask, rounded_length, device_output);
-    else{
+    }else{
         create_mask<<<blocks, THREADS_PER_BLOCK>>>(device_input, rounded_length, mask);
         exclusive_scan(mask, rounded_length, scan);
         assign_index<<<blocks, THREADS_PER_BLOCK>>>(scan, mask, rounded_length, device_output);

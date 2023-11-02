@@ -95,7 +95,7 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     double startTime_2 = CycleTimer::currentSeconds();
     saxpy_kernel<<<blocks, threadsPerBlock>>>(N, alpha, device_x, device_y, device_result);
     cudaDeviceSynchronize();
-    double endTime_2 = CycleTImer::currentSeconds();
+    double endTime_2 = CycleTimer::currentSeconds();
     //
     // CS149 TODO: copy result from GPU back to CPU using cudaMemcpy
     //
