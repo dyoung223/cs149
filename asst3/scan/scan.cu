@@ -42,6 +42,29 @@ static inline int nextPow2(int n) {
 // Also, as per the comments in cudaScan(), you can implement an
 // "in-place" scan, since the timing harness makes a copy of input and
 // places it in result
+
+__global__ void upsweep_phase(int two_dplus1, int two_d, int N, int* result){
+
+    int index = two_dplus1*(blockIdx.x * blockDim.x + threadIdx.x);
+    int taskOutputIndex = index + two_dplus1 - 1;
+    int taskInputIndex = index + two_dplus - 1; 
+    if(taskOutputIndex < N && taskInputIndex < N){
+        result[taskOutputIndex] += result[taskInputIndex];
+    }
+}
+
+__global__ void downsweep_phase(int two_dplus1, int two_d, int N, int* result){
+
+    int index = two_dplus1*(blockIdx.x * blockDim.x + threadIdx.x);
+    
+    int taskOutputIndex = index + two_dplus1 - 1;
+    int taskInputIndex = index + two_dplus - 1; 
+    if(taskOutputIndex < N && taskInputIndex < N){
+        int t = result[taskInputIndex];
+        result[taskInputIndex] = result[taskOutputIndex];
+        result[taskOutputIndex] += t;
+    }
+}
 void exclusive_scan(int* input, int N, int* result)
 {
 
@@ -53,6 +76,77 @@ void exclusive_scan(int* input, int N, int* result)
     // on the CPU.  Your implementation will need to make multiple calls
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
+    
+    int rounded_length = nextPow2(N);
+    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    // There is a case where you need to combine blocks information and don't need all the blocks turned on 
+    /*
+    if(N >= 256){
+        for(int two_d = 1; two_d <= N/2; two_d*=2){
+            int num_threads = THREADS_PER_BLOCK/two_d;
+            int two_dplus1 = 2*two_d;
+            upsweep_phase<<<blocks, num_threads>>>(two_dplus1, two_d, N, input, result);
+        }
+     }else{
+        for(int two_d = 1; two_d <= N/2; two_d*=2){
+            int num_threads = N/two_d;
+            int two_dplus1 = 2*two_d;
+            upsweep_phase<<<blocks, num_threads>>>(two_dplus1, two_d, N, input, result);
+        }
+     }
+     */
+     int two_d = 1;
+     int two_dplus1 = 2*two_d;
+     int num_ops = rounded_length/2;
+
+     //handles the case where you have multiple threads
+     while(num_ops >= THREADS_PER_BLOCK){
+        int num_blocks = num_ops/THREADS_PER_BLOCK;
+        upsweep_phase<<<num_blocks, THREADS_PER_BLOCK>>>(two_dplus1, two_d, rounded_length, result);
+        two_d *= 2;
+        two_dplus1 = 2*two_d;
+        num_ops /= 2;
+     }
+     while(num_ops > 0}{
+        int num_threads = num_ops;
+        upsweep_phase<<<1, num_threads>>>(two_dplus1, two_d, rounded_length, result);
+        two_d *= 2;
+        two_dplus1 = 2*two_d;
+        num_ops /= 2;
+     }
+
+    //Need to copy the device result back to CPU to change the last index????
+    //int* resultarray = new int[N];
+    //cudaMemcpy(resultarray, device_result, N * sizeof(int), cudaMemcpyDeviceToHost);
+    //result_array[N-1] = 0;
+    //cudaMemcpy(device_result, resultarray, N * sizeof(int), cudaMemcpyDeviceToHost);
+
+    //cudaMemSet
+    cudaMemset(device_result+(rounded_length-1)*sizeof(int), 0, sizeof(int));  
+
+    two_d = rounded_length/2;
+    two_dplus1 = 2*two_d;
+    num_ops = 1;
+    
+    while(num_ops < THREADS_PER_BLOCK){
+        num_threads = num_ops;
+        downsweep_phase<<<1, num_threads>>>(two_dplus1, two_d, rounded_length, result);
+        two_d /= 2;
+        two_dplus1 = 2*two_d;
+        num_ops *= 2;
+    }
+    while(two_d >= 1){
+        num_blocks = num_ops/THREADS_PER_BLOCK;
+        downsweep_phase<<<num_blocks, THREADS_PER_BLOCK>>>(two_dplus1, two_d, rounded_length, result);
+
+    }
+    /*
+    for(int two_d = N/2; two_d >= 1; two_d/=2){
+        int two_dplus1 = 2*two_d;
+        downsweep_phase<<<blocks, THREADS_PER_BLOCK>>>(two_dplus1, two_d, N, input, result);
+        
+    }
+    */
 
 
 }
@@ -141,6 +235,22 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 }
 
 
+__global__ void create_mask(int* input, int N, int* output){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if(index < N - 1){
+        output[index] = input[index] == input[index + 1] ? 1 : 0;
+    }
+}
+__global__ void assign_index(int* scan, int* mask, int N, int* output){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if(index < N - 1){
+        if(mask[index] == 1){
+            output[scan[index]] = index;
+        }
+    }
+}
+_
+
 // find_repeats --
 //
 // Given an array of integers `device_input`, returns an array of all
@@ -160,8 +270,23 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // exclusive_scan function with them. However, your implementation
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
+    int rounded_length = nextPow2(length);
+    int *mask;
+    int *scan;
+    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    return 0; 
+    if (rounded_length < THREADS_PER_BLOCK){
+        create_mask<<<1, rounded_length>>>(device_input, rounded_length, mask);
+        exclusive_scan(mask, rounded_length, scan);
+        assign_index<<<1, rounded_length>>>(scan, mask, rounded_length, device_output);
+    else{
+        create_mask<<<blocks, THREADS_PER_BLOCK>>>(device_input, rounded_length, mask);
+        exclusive_scan(mask, rounded_length, scan);
+        assign_index<<<blocks, THREADS_PER_BLOCK>>>(scan, mask, rounded_length, device_output);
+    }
+    
+
+    return mask[rounded_length-1]; 
 }
 
 
