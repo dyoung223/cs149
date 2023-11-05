@@ -7,6 +7,20 @@
 
 #include "circleRenderer.h"
 
+struct GlobalConstants {
+
+    SceneName sceneName;
+
+    int numCircles;
+    float* position;
+    float* velocity;
+    float* color;
+    float* radius;
+
+    int imageWidth;
+    int imageHeight;
+    float* imageData;
+};
 
 class CudaRenderer : public CircleRenderer {
 
@@ -51,6 +65,8 @@ public:
         float pixelCenterX, float pixelCenterY,
         float px, float py, float pz,
         float* pixelData);
+
+    void kernelRenderCircles_host(GlobalConstants* cuConstRendererParams_Host);
 };
 
 

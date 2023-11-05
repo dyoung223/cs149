@@ -18,7 +18,7 @@
 // Putting all the cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct GlobalConstants {
+/*struct GlobalConstants {
 
     SceneName sceneName;
 
@@ -31,7 +31,7 @@ struct GlobalConstants {
     int imageWidth;
     int imageHeight;
     float* imageData;
-};
+};*/
 
 // Global variable that is in scope, but read-only, for all cuda
 // kernels.  The __constant__ modifier designates this variable will
@@ -384,7 +384,7 @@ shadePixel(int circleIndex, float2 pixelCenter, float3 p, float4* imagePtr) {
 // Each thread renders a circle.  Since there is no protection to
 // ensure order of update or mutual exclusion on the output image, the
 // resulting image will be incorrect.
-__global__ void kernelRenderCircles() {
+/*__global__ void kernelRenderCircles() {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -425,9 +425,24 @@ __global__ void kernelRenderCircles() {
             imgPtr++;
         }
     }
-}
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////////////
+__global__ void kernelRenderPerCircle(short imageWidth, float invWidth, float invHeight, int circle_index, float3 p, short screenMaxX, short screenMaxY, short screenMinX, short screenMinY){
+    int pixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
+    int pixelX = (pixelIndex % (screenMaxX - screenMinX)) + screenMinX;
+    int pixelY = (pixelIndex / (screenMaxX - screenMinX)) + screenMinY;
+    if(pixelY < screenMaxY && pixelX < screenMaxX){
+        float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
+        //imgPtr = imgPtr + (pixelX-screenMinX);
+        //if(pixelX < screenMaxX){
+            float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
+                                                         invHeight * (static_cast<float>(pixelY) + 0.5f));
+            shadePixel(circle_index, pixelCenterNorm, p, imgPtr);
+        //}
+    }
+}
+
 
 
 CudaRenderer::CudaRenderer() {
@@ -633,13 +648,78 @@ CudaRenderer::advanceAnimation() {
     cudaDeviceSynchronize();
 }
 
+void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererParams_Host) {
+
+    for(int i = 0; i < cuConstRendererParams_Host->numCircles; i++){
+        int circle_index = i;
+        int circle_index3 = 3 * circle_index;
+
+	/*This works for single frame	
+	float* positionPtr = &position[circle_index3]; //position = cuConstRendererParams.position;
+	float3 p = *((float3*)positionPtr);
+
+        // read position and radius
+        //float3 p = *(float3*)(&(cuConstRendererParams_Host->position[circle_index3]));
+
+        //float  rad = cuConstRendererParams_Host->radius[circle_index];
+	float rad = radius[circle_index];
+*/
+	float* positionPtr = &cuConstRendererParams_Host->position; //position = cuConstRendererParams.position;
+	float3 p = *((float3*)positionPtr);
+
+        // read position and radius
+        //float3 p = *(float3*)(&(cuConstRendererParams_Host->position[circle_index3]));
+
+        //float  rad = cuConstRendererParams_Host->radius[circle_index];
+	float rad = radius[circle_index];
+
+        // compute the bounding box of the circle. The bound is in integer
+        // screen coordinates, so it's clamped to the edges of the screen.
+        short imageWidth = cuConstRendererParams_Host->imageWidth;
+        short imageHeight = cuConstRendererParams_Host->imageHeight;
+        short minX = static_cast<short>(imageWidth * (p.x - rad));
+        short maxX = static_cast<short>(imageWidth * (p.x + rad)) + 1;
+        short minY = static_cast<short>(imageHeight * (p.y - rad));
+        short maxY = static_cast<short>(imageHeight * (p.y + rad)) + 1;
+
+	//printf("circle_index: %i\np.x: %f, p.y: %f\nradius: %f\nimageWidth: %i\nimageHeight: %i\n", circle_index, p.x, p.y, rad, imageWidth, imageHeight);
+	//printf("circle_index: %i\np.x: %f, p.y: %f\n", circle_index, p.x, p.y);
+	//printf("Total number of circles: %i\n", cuConstRendererParams_Host->numCircles);
+	//printf("circle_index: %i\nimageWidth: %i\nimageHeight: %i\n", circle_index, imageWidth, imageHeight);
+	//printf("p.x: %f, p.y: %f\n", p.x, p.y);
+	// a bunch of clamps.  Is there a CUDA built-in for this?
+        short screenMinX = (minX > 0) ? ((minX < imageWidth) ? minX : imageWidth) : 0;
+        short screenMaxX = (maxX > 0) ? ((maxX < imageWidth) ? maxX : imageWidth) : 0;
+        short screenMinY = (minY > 0) ? ((minY < imageHeight) ? minY : imageHeight) : 0;
+        short screenMaxY = (maxY > 0) ? ((maxY < imageHeight) ? maxY : imageHeight) : 0;
+
+        float invWidth = 1.f / imageWidth;
+        float invHeight = 1.f / imageHeight;
+
+        // for all pixels in the bonding box
+        int num_pixels = (screenMaxY - screenMinY) * (screenMaxX - screenMinX); 
+        
+	dim3 blockDim(256);
+        dim3 gridDim((num_pixels + blockDim.x - 1) / blockDim.x);
+        kernelRenderPerCircle<<<gridDim, blockDim>>>(imageWidth, invWidth, invHeight, circle_index, p, screenMaxX, screenMaxY, screenMinX, screenMinY);
+        //kernelRenderPerCircle<<<1, 1>>>(imageWidth, invWidth, invHeight, circle_index, p, screenMaxX, screenMaxY, screenMinX, screenMinY);
+    
+    	cudaDeviceSynchronize();
+    }
+}
 void
 CudaRenderer::render() {
 
     // 256 threads per block is a healthy number
-    dim3 blockDim(256, 1);
+    /*dim3 blockDim(256, 1);
     dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
 
     kernelRenderCircles<<<gridDim, blockDim>>>();
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize(); */
+    GlobalConstants* cuConstRendererParams_Host = new GlobalConstants();
+    cudaMemcpyFromSymbol(cuConstRendererParams_Host, cuConstRendererParams, sizeof(GlobalConstants));
+
+    kernelRenderCircles_host(cuConstRendererParams_Host);
 }
+
+
