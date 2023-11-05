@@ -67,6 +67,8 @@ public:
         float* pixelData);
 
     void kernelRenderCircles_host(GlobalConstants* cuConstRendererParams_Host);
+    void launchKernelsPerPixel_host(GlobalConstants* cuConstRendererParams_Host);
+
 };
 
 

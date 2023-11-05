@@ -427,6 +427,29 @@ shadePixel(int circleIndex, float2 pixelCenter, float3 p, float4* imagePtr) {
     }
 }*/
 
+
+__global__ void kernelComputePixelValue(int imageWidth, int imageHeight){
+    int globalPixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
+    int myPixelX = pixelIndex % imageWidth;
+    int myPixelY = pixelIndex / imageHeight;
+    float invWidth = 1.f / imageWidth;
+    float invHeight = 1.f / imageHeight;
+    float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
+                                         invHeight * (static_cast<float>(pixelY) + 0.5f));
+    //If Pixel is within the bounds of the screen
+    if (myPixelX >= 0 && myPixelX < imageWidth && myPixelY >= 0 myPixelY < imageHeight){
+    //For each circle, sequentially
+        for(int circleIndex = 0; circleIndex < cuConstRendererParams.numCircles; circleIndex++){
+            //check if pixel is in the circle
+            float3 p = *(float3*)(&cuConstRendererParams.position[circleIndex * 3]);
+            float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (myPixelY * imageWidth + myPixelX)]);
+            shadePixel(circleIndex, pixelCenterNorm, p, imgPtr);
+             
+        }
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 __global__ void kernelRenderPerCircle(short imageWidth, float invWidth, float invHeight, int circle_index, float3 p, short screenMaxX, short screenMaxY, short screenMinX, short screenMinY){
     int pixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
@@ -654,7 +677,7 @@ void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererPara
         int circle_index = i;
         int circle_index3 = 3 * circle_index;
 
-	/*This works for single frame	
+	//This works for single frame	
 	float* positionPtr = &position[circle_index3]; //position = cuConstRendererParams.position;
 	float3 p = *((float3*)positionPtr);
 
@@ -663,15 +686,15 @@ void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererPara
 
         //float  rad = cuConstRendererParams_Host->radius[circle_index];
 	float rad = radius[circle_index];
-*/
-	float* positionPtr = &cuConstRendererParams_Host->position; //position = cuConstRendererParams.position;
-	float3 p = *((float3*)positionPtr);
+
+	//float* positionPtr = &cuConstRendererParams_Host->position; //position = cuConstRendererParams.position;
+	//float3 p = *((float3*)positionPtr);
 
         // read position and radius
         //float3 p = *(float3*)(&(cuConstRendererParams_Host->position[circle_index3]));
 
         //float  rad = cuConstRendererParams_Host->radius[circle_index];
-	float rad = radius[circle_index];
+	//float rad = radius[circle_index];
 
         // compute the bounding box of the circle. The bound is in integer
         // screen coordinates, so it's clamped to the edges of the screen.
@@ -707,6 +730,22 @@ void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererPara
     	cudaDeviceSynchronize();
     }
 }
+
+void CudaRenderer::launchKernelsPerPixel_host(GlobalConstants* cuCunstRendererParams_Host){
+
+    short imageWidth = cuConstRendererParams_Host->imageWidth;
+    short imageHeight = cuConstRendererParams_Host->imageHeight;
+    long long int totalPixels = imageWidth * imageHeight;
+    dim3 blockDim(256, 1);
+    dim3 gridDim((total_pixels + blockDim.x-1)/blockDim.x);
+
+    //For all pixels on the screen:
+    kernelComputePixelValue<<gridDim, blockDim>>>(imageWidth, imageHeight); 
+
+}
+
+
+
 void
 CudaRenderer::render() {
 
@@ -718,8 +757,8 @@ CudaRenderer::render() {
     cudaDeviceSynchronize(); */
     GlobalConstants* cuConstRendererParams_Host = new GlobalConstants();
     cudaMemcpyFromSymbol(cuConstRendererParams_Host, cuConstRendererParams, sizeof(GlobalConstants));
-
-    kernelRenderCircles_host(cuConstRendererParams_Host);
+    launchKernelsPerPixel_host(cuConstRendererParams_Host);
+    //kernelRenderCircles_host(cuConstRendererParams_Host);
 }
 
 
