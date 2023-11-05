@@ -432,10 +432,15 @@ __global__ void kernelRenderPerCircle(short imageWidth, float invWidth, float in
     int pixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
     int pixelX = (pixelIndex % (screenMaxX - screenMinX)) + screenMinX;
     int pixelY = (pixelIndex / (screenMaxX - screenMinX)) + screenMinY;
-    float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
-    float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
-                                                 invHeight * (static_cast<float>(pixelY) + 0.5f));
-    shadePixel(circle_index, pixelCenterNorm, p, imgPtr);
+    if(pixelY < screenMaxY && pixelX < screenMaxX){
+        float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
+        //imgPtr = imgPtr + (pixelX-screenMinX);
+        //if(pixelX < screenMaxX){
+            float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
+                                                         invHeight * (static_cast<float>(pixelY) + 0.5f));
+            shadePixel(circle_index, pixelCenterNorm, p, imgPtr);
+        //}
+    }
 }
 
 
