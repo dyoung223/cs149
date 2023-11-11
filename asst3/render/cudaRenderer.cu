@@ -734,7 +734,7 @@ void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererPara
 void CudaRenderer::launchKernelsPerPixel_host(GlobalConstants* cuConstRendererParams_Host){
 
     short imageWidth = cuConstRendererParams_Host->imageWidth;
-    short imageHeight = cuConstRendererParams_Host->imageHeight;
+    short imageHeight = cuConstRendererParams_Host->imageWidth;
     long long int totalPixels = imageWidth * imageHeight;
     dim3 blockDim(256, 1);
     dim3 gridDim((totalPixels + blockDim.x-1)/blockDim.x);
@@ -759,6 +759,7 @@ CudaRenderer::render() {
     cudaMemcpyFromSymbol(cuConstRendererParams_Host, cuConstRendererParams, sizeof(GlobalConstants));
     launchKernelsPerPixel_host(cuConstRendererParams_Host);
     //kernelRenderCircles_host(cuConstRendererParams_Host);
+
 }
 
 
