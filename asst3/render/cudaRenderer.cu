@@ -429,15 +429,15 @@ shadePixel(int circleIndex, float2 pixelCenter, float3 p, float4* imagePtr) {
 
 
 __global__ void kernelComputePixelValue(int imageWidth, int imageHeight){
-    int globalPixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
+    int pixelIndex = threadIdx.x + blockIdx.x * blockDim.x;
     int myPixelX = pixelIndex % imageWidth;
-    int myPixelY = pixelIndex / imageHeight;
+    int myPixelY = pixelIndex / imageWidth;
     float invWidth = 1.f / imageWidth;
     float invHeight = 1.f / imageHeight;
-    float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
-                                         invHeight * (static_cast<float>(pixelY) + 0.5f));
+    float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(myPixelX) + 0.5f),
+                                         invHeight * (static_cast<float>(myPixelY) + 0.5f));
     //If Pixel is within the bounds of the screen
-    if (myPixelX >= 0 && myPixelX < imageWidth && myPixelY >= 0 myPixelY < imageHeight){
+    if (myPixelX >= 0 && myPixelX < imageWidth && myPixelY >= 0 &&  myPixelY < imageHeight){
     //For each circle, sequentially
         for(int circleIndex = 0; circleIndex < cuConstRendererParams.numCircles; circleIndex++){
             //check if pixel is in the circle
@@ -731,16 +731,16 @@ void CudaRenderer::kernelRenderCircles_host(GlobalConstants* cuConstRendererPara
     }
 }
 
-void CudaRenderer::launchKernelsPerPixel_host(GlobalConstants* cuCunstRendererParams_Host){
+void CudaRenderer::launchKernelsPerPixel_host(GlobalConstants* cuConstRendererParams_Host){
 
     short imageWidth = cuConstRendererParams_Host->imageWidth;
-    short imageHeight = cuConstRendererParams_Host->imageHeight;
+    short imageHeight = cuConstRendererParams_Host->imageWidth;
     long long int totalPixels = imageWidth * imageHeight;
     dim3 blockDim(256, 1);
-    dim3 gridDim((total_pixels + blockDim.x-1)/blockDim.x);
+    dim3 gridDim((totalPixels + blockDim.x-1)/blockDim.x);
 
     //For all pixels on the screen:
-    kernelComputePixelValue<<gridDim, blockDim>>>(imageWidth, imageHeight); 
+    kernelComputePixelValue<<<gridDim, blockDim>>>(imageWidth, imageHeight); 
 
 }
 
@@ -759,6 +759,7 @@ CudaRenderer::render() {
     cudaMemcpyFromSymbol(cuConstRendererParams_Host, cuConstRendererParams, sizeof(GlobalConstants));
     launchKernelsPerPixel_host(cuConstRendererParams_Host);
     //kernelRenderCircles_host(cuConstRendererParams_Host);
+
 }
 
 
