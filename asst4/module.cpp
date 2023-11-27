@@ -202,6 +202,74 @@ torch::Tensor myUnfusedAttentionBlocked(torch::Tensor QTensor, torch::Tensor KTe
 
     // -------- YOUR CODE HERE  -------- //
 
+    int L = 8;
+
+    for (int b = 0; b < B; b++){
+
+        //loop over heads
+        for (int h = 0; h < H; h++){
+            for (int i = 0; i < N ; i++){
+     		for (int qkt1_b = 0; qkt1_b < N; qkt1_b = qkt1_b + L){
+                    for (int qkt2_b = 0; qkt2_b < N; qkt2_b = qkt2_b + L){  
+		        for( int j_b = 0; j_b < d; j_b = j_b + L){  
+		            for (int qkt1 = qkt1_b; qkt1 < std::min(qkt1_b + L, N); qkt1++){
+		                for (int qkt2 = qkt2_b; qkt2 < std::min(qkt2_b + L, N); qkt2++){
+		                    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+		                    for(int j = j_b; j < std::min(j_b + L,  d); j++){
+		                        float val_q = fourDimRead(Q, b, h, qkt1, j, H, N, d);
+		                        float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
+		                        val_qkt += val_q * val_kt;                        
+				    }
+				    //printf("val_qkt = %f", val_qkt);
+				    twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
+			        }
+			    }
+		        }
+		    }
+	        }
+	    }
+	
+	    for (int qkt1 = 0; qkt1 < N; qkt1++){
+	        float sum_exp_val_qkt = 0.0;
+	        for (int qkt2 = 0; qkt2 < N; qkt2++){
+	 	    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+		    float exp_val_qkt = exp(val_qkt);
+		    sum_exp_val_qkt += exp_val_qkt;
+	        }
+	        for (int qkt2 = 0; qkt2 < N; qkt2++){
+		    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+		    float exp_val_qkt = exp(val_qkt);
+		    float val_softmax = exp_val_qkt / sum_exp_val_qkt;
+		    //printf("exp_val_qkt = %f ", exp_val_qkt);      
+		    //printf("sum_exp_val_qkt = %f ", sum_exp_val_qkt);      
+		    //printf("val_softmax = %f ", val_softmax);    
+		    twoDimWrite(QK_t, qkt1, qkt2, N, val_softmax);
+	        }
+	    }
+	
+	    for (int o1_b = 0; o1_b < N; o1_b = o1_b + L){
+                for (int o2_b = 0; o2_b < d; o2_b = o2_b + L){  
+		    for( int j_b = 0; j_b < N; j_b = j_b + L){  
+		        for (int o1 = o1_b; o1 < std::min(o1_b + L, N); o1++){
+			    for (int o2 = o2_b; o2 < std::min(o2_b + L, d); o2++){
+			        float val_o = fourDimRead(O, b, h, o1, o2, H, N, d);
+			        for(int j = j_b; j < std::min(j_b + L,  N); j++){
+				    float val_softmax = twoDimRead(QK_t, o1, j, N);
+				    float val_v = fourDimRead(V, b, h, j, o2, H, N, d);
+				    val_o += val_softmax * val_v;                        
+			        }
+			//printf("val_qkt = %f", val_qkt);
+			        fourDimWrite(O, b, h, o1, o2, H, N, d, val_o);
+			    }
+		        }
+		    }
+	        }
+ 	    }           
+	
+	}
+
+    }
+
     // DO NOT EDIT THIS RETURN STATEMENT //
     // It formats your C++ Vector O back into a Tensor of Shape (B, H, N, d) and returns it //
     return torch::from_blob(O.data(), {B, H, N, d}, torch::TensorOptions().dtype(torch::kFloat32)).clone();
@@ -236,74 +304,6 @@ torch::Tensor myFusedAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
     // -------- YOUR CODE HERE  -------- //
     // We give you a template of the first three loops for your convenience
     //loop over batch
-
-    int L = 8;
-
-    for (int b = 0; b < B; b++){
-
-        //loop over heads
-        for (int h = 0; h < H; h++){
-            for (int i = 0; i < N ; i++){
-     		for (int qkt1_b = 0; qkt1_b < N; qkt1_b = qkt1_b + L){
-                    for (int qkt2_b = 0; qkt2_b < N; qkt2_b = qkt2_b + L){  
-		        for( int j_b = 0; j_b < d; j_b = j_b + L){  
-		            for (int qkt1 = qkt1_b; qkt1 < std::min(qkt1_b + L, N); qkt1++){
-		                for (int qkt2 = qkt2_b; qkt2 < std::min(qkt2_b + L, N); qkt2++){
-		                    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
-		                    for(int j = j_b; j < std::min(j_b + L,  d); j++){
-		                        float val_q = fourDimRead(Q, b, h, qkt1, j, H, N, d);
-		                        float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
-		                        val_qkt += val_q * val_kt;                        
-				    }
-				    //printf("val_qkt = %f", val_qkt);
-				    twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
-			        }
-			    }
-		        }
-		    }
-	        }
-	    }
-	
-	   for (int qkt1 = 0; qkt1 < N; qkt1++){
-	       float sum_exp_val_qkt = 0.0;
-	       for (int qkt2 = 0; qkt2 < N; qkt2++){
-		   float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
-		   float exp_val_qkt = exp(val_qkt);
-		   sum_exp_val_qkt += exp_val_qkt;
-	       }
-	       for (int qkt2 = 0; qkt2 < N; qkt2++){
-		   float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
-		   float exp_val_qkt = exp(val_qkt);
-		   float val_softmax = exp_val_qkt / sum_exp_val_qkt;
-		   //printf("exp_val_qkt = %f ", exp_val_qkt);      
-		   //printf("sum_exp_val_qkt = %f ", sum_exp_val_qkt);      
-		   //printf("val_softmax = %f ", val_softmax);    
-		   twoDimWrite(QK_t, qkt1, qkt2, N, val_softmax);
-	       }
-	   }
-	
-	   for (int o1_b = 0; o1_b < N; o1_b = o1_b + L){
-               for (int o2_b = 0; o2_b < d; o2_b = o2_b + L){  
-		   for( int j_b = 0; j_b < N; j_b = j_b + L){  
-		       for (int o1 = o1_b; o1 < std::min(o1_b + L, N); o1++){
-			   for (int o2 = o2_b; o2 < std::min(o2_b + L, d); o2++){
-			       float val_o = fourDimRead(O, b, h, o1, o2, H, N, d);
-			       for(int j = j_b; j < std::min(j_b + L,  N); j++){
-				   float val_softmax = twoDimRead(QK_t, o1, j, N);
-				   float val_v = fourDimRead(V, b, h, j, o2, H, N, d);
-				   val_o += val_softmax * val_v;                        
-			       }
-			//printf("val_qkt = %f", val_qkt);
-			       fourDimWrite(O, b, h, o1, o2, H, N, d, val_o);
-			   }
-		       }
-		   }
-	       }
- 	   }          
-	
-	}
-
-    }
 	    
 	
     // DO NOT EDIT THIS RETURN STATEMENT //
