@@ -27,12 +27,12 @@ inline void twoDimWrite(std::vector<float> &tensor, int &x, int &y, const int &s
 // Step #2: Implement Read/Write Accessors for a 4D Tensor
 inline float fourDimRead(std::vector<float> &tensor, int &x, int &y, int &z, int &b, 
         const int &sizeX, const int &sizeY, const int &sizeZ) {
-    return 0.0;
+    return tensor[x*(sizeX*sizeY*sizeZ) + y*(sizeY*sizeZ) + z*sizeZ + b];
 }
 
 inline void fourDimWrite(std::vector<float> &tensor, int &x, int &y, int &z, int &b, 
         const int &sizeX, const int &sizeY, const int &sizeZ, float &val) {
-    return; 
+    tensor[x*(sizeX*sizeY*sizeZ) + y*(sizeY*sizeZ) + z*sizeZ + b] = val; 
 }
 
 // DO NOT EDIT THIS FUNCTION //
@@ -123,6 +123,54 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
     */
     
     // -------- YOUR CODE HERE  -------- //
+    for (int b = 0; b < B; b++) {
+        //loop over Heads
+        for (int h = 0; h < H; h++) {
+            //loop over Sequence Length
+            for (int qkt1 = 0; qkt1 < N; qkt1++){
+                for (int qkt2 = 0; qkt2 < N; qkt2++){
+                    float val_qkt = 0.0;
+                    for(int j = 0; j < d; j++){
+                        float val_q = fourDimRead(Q, b, h, qkt1, j, H, N, d);
+                        float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
+                        val_qkt += val_q * val_kt;                        
+                    }
+                    //printf("val_qkt = %f", val_qkt); 
+                    twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
+                }
+            }
+            for (int qkt1 = 0; qkt1 < N; qkt1++){
+                float sum_exp_val_qkt = 0.0;
+                for (int qkt2 = 0; qkt2 < N; qkt2++){
+                    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+                    float exp_val_qkt = exp(val_qkt);
+                    sum_exp_val_qkt += exp_val_qkt;
+                }
+                for (int qkt2 = 0; qkt2 < N; qkt2++){
+                    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+                    float exp_val_qkt = exp(val_qkt);
+                    float val_softmax = exp_val_qkt / sum_exp_val_qkt;
+                    //printf("exp_val_qkt = %f ", exp_val_qkt);      
+                    //printf("sum_exp_val_qkt = %f ", sum_exp_val_qkt);      
+                    //printf("val_softmax = %f ", val_softmax);    
+                    twoDimWrite(QK_t, qkt1, qkt2, N, val_softmax);
+                }
+            }
+
+            for(int o1 = 0; o1 < N; o1++){
+                for(int o2 = 0; o2 < d; o2++){
+                    float val_o = 0.0;
+                    for (int j = 0; j < N; j++){
+                        float val_softmax = twoDimRead(QK_t, o1, j, N);
+                        float val_v = fourDimRead(V, b, h, j, o2, H, N, d);
+                        val_o += val_softmax * val_v;
+                    }
+                    
+                    fourDimWrite(O, b, h, o1, o2, H, N, d, val_o);
+                }
+            }           
+        }
+    }
     
     // DO NOT EDIT THIS RETURN STATEMENT //
     // It formats your C++ Vector O back into a Tensor of Shape (B, H, N, d) and returns it //
