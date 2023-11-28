@@ -208,26 +208,29 @@ torch::Tensor myUnfusedAttentionBlocked(torch::Tensor QTensor, torch::Tensor KTe
 
         //loop over heads
         for (int h = 0; h < H; h++){
-            for (int i = 0; i < N ; i++){
-     		for (int qkt1_b = 0; qkt1_b < N; qkt1_b = qkt1_b + L){
-                    for (int qkt2_b = 0; qkt2_b < N; qkt2_b = qkt2_b + L){  
-		        for( int j_b = 0; j_b < d; j_b = j_b + L){  
-		            for (int qkt1 = qkt1_b; qkt1 < std::min(qkt1_b + L, N); qkt1++){
-		                for (int qkt2 = qkt2_b; qkt2 < std::min(qkt2_b + L, N); qkt2++){
-		                    float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
-		                    for(int j = j_b; j < std::min(j_b + L,  d); j++){
-		                        float val_q = fourDimRead(Q, b, h, qkt1, j, H, N, d);
-		                        float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
-		                        val_qkt += val_q * val_kt;                        
-				    }
-				    //printf("val_qkt = %f", val_qkt);
-				    twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
-			        }
+            //for (int i = 0; i < N ; i++){
+	    std::fill(QK_t.begin(), QK_t.end(), 0);
+
+	    for (int qkt1_b = 0; qkt1_b < N; qkt1_b = qkt1_b + L){
+	    	for (int qkt2_b = 0; qkt2_b < N; qkt2_b = qkt2_b + L){  
+		    for( int j_b = 0; j_b < d; j_b = j_b + L){  
+		    	for (int qkt1 = qkt1_b; qkt1 < std::min(qkt1_b + L, N); qkt1++){
+			    for (int qkt2 = qkt2_b; qkt2 < std::min(qkt2_b + L, N); qkt2++){
+			    	float val_qkt = twoDimRead(QK_t, qkt1, qkt2, N);
+			        for(int j = j_b; j < std::min(j_b + L,  d); j++){
+				    float val_q = fourDimRead(Q, b, h, qkt1, j, H, N, d);
+				    float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
+				    val_qkt += val_q * val_kt;                        
+			     	}
+			    //printf("val_qkt = %f", val_qkt);
+			        twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
 			    }
-		        }
+		    	}
 		    }
-	        }
+	    	}
 	    }
+
+	    
 	
 	    for (int qkt1 = 0; qkt1 < N; qkt1++){
 	        float sum_exp_val_qkt = 0.0;
