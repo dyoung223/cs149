@@ -135,7 +135,7 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
                         float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
                         val_qkt += val_q * val_kt;                        
                     }
-                    //printf("val_qkt = %f", val_qkt); 
+                    printf("val_qkt = %f\n", val_qkt); 
                     twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
                 }
             }
@@ -307,7 +307,62 @@ torch::Tensor myFusedAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
     // -------- YOUR CODE HERE  -------- //
     // We give you a template of the first three loops for your convenience
     //loop over batch
-	    
+    //
+
+    #pragma omp parallel for collapse(3) 
+    for(int b = 0; b < B; b++){
+	for(int h = 0; h < H; h++){
+	    for(int i = 0; i < N; i++){
+		//printf("Starting New Row of Computation\n");	
+    		at::Tensor ORowTensor = temp.index({torch::indexing::Slice(omp_get_thread_num(), torch::indexing::None)});
+		std::vector<float> ORow = formatTensor(ORowTensor);
+		int zeroRow = 0;
+	    	//std::fill(ORow.begin(), ORow.end(), 0);
+		for (int q = 0; q < N; q++){
+                    float val_qkt = 0.0;
+                    for(int j = 0; j < d; j++){
+                        float val_q = fourDimRead(Q, b, h, i, j, H, N, d);
+			//printf("Read q");
+                        float val_kt = fourDimRead(K, b, h, q, j, H, N, d);
+			//printf("Read KT");
+                        val_qkt += val_q * val_kt;                        
+                    }
+                    //printf("val_qkt = %f\n", val_qkt); 
+                    twoDimWrite(ORow, zeroRow, q, N, val_qkt);
+                }
+		//A single row has been completed (matmul)
+	 	//printf("A Row has completed its computation\n");	
+
+		float sum_exp_val_qkt = 0.0;
+                for (int q = 0; q < N; q++){
+                    float val_qkt = twoDimRead(ORow, zeroRow, q, N);
+                    float exp_val_qkt = exp(val_qkt);
+                    sum_exp_val_qkt += exp_val_qkt;
+                }
+                for (int q = 0; q < N; q++){
+                    float val_qkt = twoDimRead(ORow, zeroRow, q, N);
+                    float exp_val_qkt = exp(val_qkt);
+                    float val_softmax = exp_val_qkt / sum_exp_val_qkt;
+                    twoDimWrite(ORow, zeroRow, q, N, val_softmax);
+                }
+		//Softmax has been completed	
+		//printf("Softmax of a row has completed\n");
+
+                for(int o = 0; o < d; o++){
+                    float val_o = 0.0;
+                    for (int j = 0; j < N; j++){
+                        float val_softmax = twoDimRead(ORow, zeroRow, j, N);
+                        float val_v = fourDimRead(V, b, h, j, o, H, N, d);
+                        val_o += val_softmax * val_v;
+                    }
+                    
+                    fourDimWrite(O, b, h, i, o, H, N, d, val_o);
+                }
+		//printf("Finished writing to output\n");
+	    }
+	   
+	}
+    }    
 	
     // DO NOT EDIT THIS RETURN STATEMENT //
     // It formats your C++ Vector O back into a Tensor of Shape (B, H, N, d) and returns it //
