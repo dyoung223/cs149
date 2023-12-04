@@ -135,7 +135,7 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
                         float val_kt = fourDimRead(K, b, h, qkt2, j, H, N, d);
                         val_qkt += val_q * val_kt;                        
                     }
-                    printf("val_qkt = %f\n", val_qkt); 
+                    //printf("val_qkt = %f\n", val_qkt); 
                     twoDimWrite(QK_t, qkt1, qkt2, N, val_qkt);
                 }
             }
@@ -202,7 +202,7 @@ torch::Tensor myUnfusedAttentionBlocked(torch::Tensor QTensor, torch::Tensor KTe
 
     // -------- YOUR CODE HERE  -------- //
 
-    int L = 8;
+    int L = 16;
 
     for (int b = 0; b < B; b++){
 
@@ -451,7 +451,7 @@ torch::Tensor myFlashAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
                         for (int col = col_block; col < std::min(col_block + Bc, N); col++){
                             int true_col = col - col_block;
                             //printf("Beginning new col %i\n", col);
-                            float val_qkt = twoDimRead(Sij, true_row, true_col, Br);
+                            float val_qkt = twoDimRead(Sij, true_row, true_col, Bc);
                             //printf("Read in Sij for row %i, col %i\n", row, col);
                             for(int j = 0; j < d; j++){
                                 float val_q = fourDimRead(Q, b, h, row, j, H, N, d);
@@ -459,9 +459,9 @@ torch::Tensor myFlashAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
                                 val_qkt += val_q * val_kt;
                             }
                             //printf("Calculated qkt\n");
-                            twoDimWrite(Sij, true_row, true_col, Br, val_qkt);
+                            twoDimWrite(Sij, true_row, true_col, Bc, val_qkt);
                             float exp_val_qkt = exp(val_qkt);
-                            twoDimWrite(Pij, true_row, true_col, Br, exp_val_qkt);
+                            twoDimWrite(Pij, true_row, true_col, Bc, exp_val_qkt);
                             val_lij += exp_val_qkt;
                             lij[true_row] = val_lij;
 
@@ -474,7 +474,7 @@ torch::Tensor myFlashAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
                             float output_sum = 0.f;
                             for (int col = col_block; col < std::min(col_block + Bc, N); col++){
                                 int true_col = col - col_block;
-                                float exp_val = twoDimRead(Pij, true_row, true_col, Br);
+                                float exp_val = twoDimRead(Pij, true_row, true_col, Bc);
                                 float v_val = fourDimRead(V, b, h, col, j, H, N, d);
                                 //float v_val = twoDimRead(Vj, col, j, d);
                                 output_sum += exp_val * v_val;
