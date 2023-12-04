@@ -1,0 +1,1281 @@
+-------------Part1---------------N = 1 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0001633167266845703 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::zeros        24.14%      56.000us        34.05%      79.000us      19.750us         524 b           4 b             4  
+                    aten::empty         3.45%       8.000us         3.45%       8.000us       1.333us         520 b         520 b             6  
+    REFERENCE - NAIVE ATTENTION        32.33%      75.000us        63.36%     147.000us     147.000us         512 b        -516 b             1  
+                    aten::clone        10.34%      24.000us        11.64%      27.000us      27.000us         512 b           0 b             1  
+            aten::empty_strided         1.29%       3.000us         1.29%       3.000us       3.000us         512 b         512 b             1  
+                model_inference        11.21%      26.000us        75.86%     176.000us     176.000us         508 b         -12 b             1  
+                    aten::zero_         6.90%      16.000us         6.90%      16.000us       4.000us           4 b           4 b             4  
+                  aten::flatten         6.90%      16.000us         7.76%      18.000us       3.600us           0 b           0 b             5  
+           aten::_reshape_alias         1.29%       3.000us         1.29%       3.000us       0.600us           0 b           0 b             5  
+                    aten::copy_         2.16%       5.000us         2.16%       5.000us       5.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 232.000us
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  0.147ms
+mem usage:  512 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  9.942054748535156e-05 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         5.56%       7.000us         5.56%       7.000us       1.167us         788 b         788 b             6  
+                  aten::zeros        14.29%      18.000us        19.84%      25.000us       6.250us         524 b           0 b             4  
+    STUDENT - NAIVE ATTENTION        39.68%      50.000us        67.46%      85.000us      85.000us         512 b        -516 b             1  
+                  aten::clone         5.56%       7.000us         9.52%      12.000us      12.000us         512 b           0 b             1  
+          aten::empty_strided         1.59%       2.000us         1.59%       2.000us       2.000us         512 b         512 b             1  
+              model_inference        17.46%      22.000us        87.30%     110.000us     110.000us         508 b        -272 b             1  
+                  aten::zero_         1.59%       2.000us         1.59%       2.000us       0.500us           0 b           0 b             4  
+                aten::flatten         9.52%      12.000us        11.90%      15.000us       3.000us           0 b           0 b             5  
+         aten::_reshape_alias         2.38%       3.000us         2.38%       3.000us       0.600us           0 b           0 b             5  
+                  aten::copy_         2.38%       3.000us         2.38%       3.000us       3.000us           0 b           0 b             1  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 126.000us
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  0.085ms
+mem usage:  512 bytes
+
+Errors:
+STAGE:2023-12-04 23:15:44 128061:128061 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:44 128061:128061 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:15:47 128061:128061 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:47 128061:128061 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 1 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0001380443572998047 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         2.73%       5.000us         2.73%       5.000us       0.833us         540 b         540 b             6  
+                                     aten::zeros        19.13%      35.000us        29.51%      54.000us      13.500us         524 b         520 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        39.89%      73.000us        68.31%     125.000us     125.000us         512 b        -784 b             1  
+                                     aten::clone         8.74%      16.000us        12.02%      22.000us      22.000us         512 b           0 b             1  
+                             aten::empty_strided         1.09%       2.000us         1.09%       2.000us       2.000us         512 b         512 b             1  
+                                 model_inference        11.48%      21.000us        80.33%     147.000us     147.000us         508 b        -276 b             1  
+                                     aten::zero_         7.65%      14.000us         7.65%      14.000us       3.500us           0 b           0 b             4  
+                                   aten::flatten         5.46%      10.000us         7.10%      13.000us       2.600us           0 b           0 b             5  
+                            aten::_reshape_alias         1.64%       3.000us         1.64%       3.000us       0.600us           0 b           0 b             5  
+                                     aten::copy_         2.19%       4.000us         2.19%       4.000us       4.000us           0 b           0 b             1  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 183.000us
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  0.125ms
+mem usage:  512 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  8.344650268554688e-05 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::zeros        12.84%      14.000us        19.27%      21.000us       5.250us         524 b         520 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        42.20%      46.000us        66.06%      72.000us      72.000us         512 b        -788 b             1  
+                                   aten::clone         5.50%       6.000us        10.09%      11.000us      11.000us         512 b         512 b             1  
+                               model_inference        18.35%      20.000us        85.32%      93.000us      93.000us         508 b         -12 b             1  
+                                   aten::empty         4.59%       5.000us         4.59%       5.000us       0.833us         276 b         276 b             6  
+                                   aten::zero_         2.75%       3.000us         2.75%       3.000us       0.750us           4 b           4 b             4  
+                                 aten::flatten         6.42%       7.000us         9.17%      10.000us       2.000us           0 b           0 b             5  
+                          aten::_reshape_alias         2.75%       3.000us         2.75%       3.000us       0.600us           0 b           0 b             5  
+                           aten::empty_strided         0.92%       1.000us         0.92%       1.000us       1.000us           0 b           0 b             1  
+                                   aten::copy_         3.67%       4.000us         3.67%       4.000us       4.000us           0 b           0 b             1  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 109.000us
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  0.072ms
+mem usage:  512 bytes
+
+Errors:
+STAGE:2023-12-04 23:15:48 128299:128299 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:48 128299:128299 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:15:51 128299:128299 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:51 128299:128299 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 1 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00019168853759765625 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         3.38%       8.000us         3.38%       8.000us       1.333us         780 b         780 b             6  
+                    aten::zeros        14.35%      34.000us        23.21%      55.000us      13.750us         552 b          36 b             4  
+    REFERENCE - FUSED ATTENTION        46.41%     110.000us        75.11%     178.000us     178.000us         540 b        -548 b             1  
+                    aten::clone         6.75%      16.000us         9.28%      22.000us      22.000us         512 b           0 b             1  
+            aten::empty_strided         0.84%       2.000us         0.84%       2.000us       2.000us         512 b         512 b             1  
+                model_inference         8.44%      20.000us        84.81%     201.000us     201.000us         508 b        -304 b             1  
+                    aten::zero_         5.91%      14.000us         5.91%      14.000us       3.500us          36 b          36 b             4  
+                  aten::flatten         4.64%      11.000us         6.33%      15.000us       3.000us           0 b           0 b             5  
+           aten::_reshape_alias         1.69%       4.000us         1.69%       4.000us       0.800us           0 b           0 b             5  
+                    aten::slice         5.49%      13.000us         5.91%      14.000us      14.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 237.000us
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  0.178ms
+mem usage:  540 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0001125335693359375 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::zeros        11.59%      16.000us        15.94%      22.000us       4.400us         556 b         552 b             5  
+    STUDENT - FUSED ATTENTION        47.10%      65.000us        72.46%     100.000us     100.000us         540 b        -304 b             1  
+                  aten::empty         3.62%       5.000us         3.62%       5.000us       0.714us         536 b         536 b             7  
+          aten::empty_strided         1.45%       2.000us         1.45%       2.000us       2.000us         512 b         512 b             1  
+              model_inference        15.22%      21.000us        89.13%     123.000us     123.000us         508 b        -304 b             1  
+                  aten::zero_         1.45%       2.000us         1.45%       2.000us       0.400us          36 b          36 b             5  
+                aten::flatten         5.80%       8.000us         7.97%      11.000us       1.833us           0 b           0 b             6  
+         aten::_reshape_alias         2.17%       3.000us         2.17%       3.000us       0.600us           0 b           0 b             5  
+                  aten::slice         5.07%       7.000us         5.07%       7.000us       7.000us           0 b           0 b             1  
+             aten::as_strided         0.00%       0.000us         0.00%       0.000us       0.000us           0 b           0 b             1  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 138.000us
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  0.1ms
+mem usage:  540 bytes
+
+Errors:
+STAGE:2023-12-04 23:15:52 128446:128446 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:52 128446:128446 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:15:55 128446:128446 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:55 128446:128446 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 3 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00018143653869628906 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         3.31%       8.000us         3.31%       8.000us       1.143us       3.27 Kb       3.27 Kb             7  
+                    aten::clone        11.98%      29.000us        17.77%      43.000us      21.500us       3.00 Kb           0 b             2  
+                    aten::zeros        18.60%      45.000us        26.45%      64.000us      16.000us       1.54 Kb          36 b             4  
+    REFERENCE - NAIVE ATTENTION        21.90%      53.000us        68.60%     166.000us     166.000us       1.53 Kb      -3.00 Kb             1  
+                  aten::flatten        18.60%      45.000us        32.64%      79.000us      15.800us       1.50 Kb           0 b             5  
+               aten::empty_like         1.24%       3.000us         1.65%       4.000us       4.000us       1.50 Kb           0 b             1  
+            aten::empty_strided         0.83%       2.000us         0.83%       2.000us       2.000us       1.50 Kb       1.50 Kb             1  
+                model_inference        11.57%      28.000us        81.40%     197.000us     197.000us       1.50 Kb        -304 b             1  
+                    aten::zero_         7.44%      18.000us         7.44%      18.000us       4.500us           0 b           0 b             4  
+           aten::_reshape_alias         0.83%       2.000us         0.83%       2.000us       0.500us           0 b           0 b             4  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 242.000us
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  0.166ms
+mem usage:  1568 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00011754035949707031 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         3.57%       5.000us         3.57%       5.000us       0.714us       3.04 Kb       3.04 Kb             7  
+                  aten::clone         6.43%       9.000us        15.71%      22.000us      11.000us       3.00 Kb           0 b             2  
+                  aten::zeros        11.43%      16.000us        15.71%      22.000us       5.500us       1.54 Kb           0 b             4  
+    STUDENT - NAIVE ATTENTION        38.57%      54.000us        72.86%     102.000us     102.000us       1.53 Kb      -3.00 Kb             1  
+                aten::flatten        10.71%      15.000us        22.86%      32.000us       6.400us       1.50 Kb           0 b             5  
+             aten::empty_like         2.86%       4.000us         3.57%       5.000us       5.000us       1.50 Kb           0 b             1  
+          aten::empty_strided         1.43%       2.000us         1.43%       2.000us       2.000us       1.50 Kb       1.50 Kb             1  
+              model_inference        16.43%      23.000us        91.43%     128.000us     128.000us       1.50 Kb         -40 b             1  
+                  aten::zero_         2.14%       3.000us         2.14%       3.000us       0.750us           0 b           0 b             4  
+         aten::_reshape_alias         1.43%       2.000us         1.43%       2.000us       0.500us           0 b           0 b             4  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 140.000us
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  0.102ms
+mem usage:  1568 bytes
+
+Errors:
+STAGE:2023-12-04 23:15:57 128603:128603 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:15:57 128603:128603 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:00 128603:128603 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:00 128603:128603 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 3 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00016117095947265625 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         3.86%       8.000us         3.86%       8.000us       1.143us       3.56 Kb       3.56 Kb             7  
+                                     aten::clone        11.11%      23.000us        16.43%      34.000us      17.000us       3.00 Kb           0 b             2  
+                                     aten::zeros        16.43%      34.000us        26.57%      55.000us      13.750us       1.54 Kb          36 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        25.60%      53.000us        71.50%     148.000us     148.000us       1.53 Kb      -1.80 Kb             1  
+                                aten::empty_like         0.97%       2.000us         1.45%       3.000us       3.000us       1.50 Kb           0 b             1  
+                             aten::empty_strided         0.48%       1.000us         0.48%       1.000us       1.000us       1.50 Kb       1.50 Kb             1  
+                                 model_inference        10.14%      21.000us        83.09%     172.000us     172.000us       1.50 Kb        -304 b             1  
+                                     aten::zero_         7.25%      15.000us         7.25%      15.000us       3.750us           0 b           0 b             4  
+                                   aten::flatten        19.32%      40.000us        33.33%      69.000us      13.800us           0 b      -1.50 Kb             5  
+                            aten::_reshape_alias         0.97%       2.000us         0.97%       2.000us       0.500us           0 b           0 b             4  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 207.000us
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  0.148ms
+mem usage:  1568 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00010323524475097656 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::clone         7.19%      10.000us        15.11%      21.000us      10.500us       3.00 Kb           0 b             2  
+                                   aten::empty         3.60%       5.000us         3.60%       5.000us       0.714us       1.76 Kb       1.76 Kb             7  
+                                   aten::zeros         8.63%      12.000us        12.95%      18.000us       4.500us       1.54 Kb          40 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        33.81%      47.000us        64.03%      89.000us      89.000us       1.53 Kb      -3.04 Kb             1  
+                                 aten::flatten         8.63%      12.000us        20.86%      29.000us       5.800us       1.50 Kb           0 b             5  
+                              aten::empty_like         2.16%       3.000us         2.16%       3.000us       3.000us       1.50 Kb       1.50 Kb             1  
+                                   aten::copy_         5.04%       7.000us         5.04%       7.000us       3.500us       1.50 Kb       1.50 Kb             2  
+                               model_inference        25.90%      36.000us        91.37%     127.000us     127.000us       1.50 Kb        -308 b             1  
+                                   aten::zero_         2.16%       3.000us         2.16%       3.000us       0.750us          40 b          40 b             4  
+                          aten::_reshape_alias         1.44%       2.000us         1.44%       2.000us       0.500us           0 b           0 b             4  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 139.000us
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  0.089ms
+mem usage:  1568 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:01 128750:128750 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:01 128750:128750 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:04 128750:128750 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:04 128750:128750 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 3 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0003814697265625 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         1.87%       8.000us         1.87%       8.000us       1.143us       3.62 Kb       3.62 Kb             7  
+                    aten::clone         5.62%      24.000us         8.67%      37.000us      18.500us       3.00 Kb           0 b             2  
+                    aten::zeros        10.54%      45.000us        12.65%      54.000us      13.500us       1.60 Kb          96 b             4  
+    REFERENCE - FUSED ATTENTION        31.15%     133.000us        85.95%     367.000us     367.000us       1.59 Kb      -3.36 Kb             1  
+                  aten::flatten         9.84%      42.000us        17.10%      73.000us      12.167us       1.50 Kb           0 b             6  
+               aten::empty_like         0.47%       2.000us         0.70%       3.000us       3.000us       1.50 Kb           0 b             1  
+            aten::empty_strided         0.70%       3.000us         0.70%       3.000us       3.000us       1.50 Kb       1.50 Kb             1  
+                model_inference         5.15%      22.000us        91.80%     392.000us     392.000us       1.50 Kb        -364 b             1  
+                    aten::zero_         3.28%      14.000us         3.28%      14.000us       3.500us           0 b           0 b             4  
+           aten::_reshape_alias         0.70%       3.000us         0.70%       3.000us       0.600us           0 b           0 b             5  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 427.000us
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  0.367ms
+mem usage:  1628 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0001480579376220703 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         2.96%       5.000us         2.96%       5.000us       0.625us       3.37 Kb       3.37 Kb             8  
+                  aten::clone         5.92%      10.000us        11.83%      20.000us      10.000us       3.00 Kb           0 b             2  
+                  aten::zeros         7.69%      13.000us        11.83%      20.000us       4.000us       1.61 Kb         112 b             5  
+    STUDENT - FUSED ATTENTION        39.64%      67.000us        79.88%     135.000us     135.000us       1.59 Kb      -1.88 Kb             1  
+             aten::empty_like         1.18%       2.000us         1.78%       3.000us       3.000us       1.50 Kb           0 b             1  
+          aten::empty_strided         1.18%       2.000us         1.18%       2.000us       2.000us       1.50 Kb       1.50 Kb             1  
+              model_inference        12.43%      21.000us        92.90%     157.000us     157.000us       1.50 Kb        -104 b             1  
+                  aten::zero_         1.78%       3.000us         1.78%       3.000us       0.600us           0 b           0 b             5  
+                aten::flatten        16.57%      28.000us        27.22%      46.000us       6.571us           0 b      -1.50 Kb             7  
+         aten::_reshape_alias         1.18%       2.000us         1.18%       2.000us       0.400us           0 b           0 b             5  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 169.000us
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  0.135ms
+mem usage:  1628 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:05 128884:128884 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:05 128884:128884 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:08 128884:128884 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:08 128884:128884 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 101 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0022864341735839844 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.47%      11.000us         0.47%      11.000us       1.571us     141.11 Kb     141.11 Kb             7  
+                    aten::clone         1.15%      27.000us         3.12%      73.000us      36.500us     101.00 Kb           0 b             2  
+                    aten::zeros         1.62%      38.000us         2.86%      67.000us      16.750us      90.36 Kb     -39.85 Kb             4  
+    REFERENCE - NAIVE ATTENTION        90.38%       2.114ms        97.01%       2.269ms       2.269ms      90.34 Kb     -50.50 Kb             1  
+               aten::empty_like         0.13%       3.000us         0.17%       4.000us       4.000us      50.50 Kb           0 b             1  
+            aten::empty_strided         0.17%       4.000us         0.17%       4.000us       4.000us      50.50 Kb      50.50 Kb             1  
+                model_inference         1.20%      28.000us        98.33%       2.300ms       2.300ms      50.50 Kb     -40.11 Kb             1  
+                    aten::zero_         0.90%      21.000us         0.90%      21.000us       5.250us      39.85 Kb      39.85 Kb             4  
+                  aten::flatten         2.09%      49.000us         4.28%     100.000us      20.000us           0 b     -50.50 Kb             5  
+           aten::_reshape_alias         0.17%       4.000us         0.17%       4.000us       1.000us           0 b           0 b             4  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.339ms
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  2.269ms
+mem usage:  92512 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.002035856246948242 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.48%      10.000us         0.48%      10.000us       1.429us     141.11 Kb     141.11 Kb             7  
+                  aten::clone         0.48%      10.000us         2.03%      42.000us      21.000us     101.00 Kb           0 b             2  
+                  aten::zeros         0.82%      17.000us         1.60%      33.000us       8.250us      90.36 Kb     -39.85 Kb             4  
+    STUDENT - NAIVE ATTENTION        94.33%       1.947ms        97.87%       2.020ms       2.020ms      90.34 Kb     -50.50 Kb             1  
+             aten::empty_like         0.10%       2.000us         0.15%       3.000us       3.000us      50.50 Kb           0 b             1  
+          aten::empty_strided         0.10%       2.000us         0.10%       2.000us       2.000us      50.50 Kb      50.50 Kb             1  
+              model_inference         1.16%      24.000us        99.18%       2.047ms       2.047ms      50.50 Kb     -40.11 Kb             1  
+                  aten::zero_         0.39%       8.000us         0.39%       8.000us       2.000us      39.85 Kb      39.85 Kb             4  
+                aten::flatten         0.63%      13.000us         2.42%      50.000us      10.000us           0 b     -50.50 Kb             5  
+         aten::_reshape_alias         0.15%       3.000us         0.15%       3.000us       0.750us           0 b           0 b             4  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.064ms
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  2.02ms
+mem usage:  92512 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:10 129106:129106 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:10 129106:129106 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:13 129106:129106 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:13 129106:129106 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 101 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0020678043365478516 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         0.47%      10.000us         0.47%      10.000us       1.429us     140.86 Kb     140.86 Kb             7  
+                                     aten::clone         1.23%      26.000us         3.31%      70.000us      35.000us     101.00 Kb           0 b             2  
+                                     aten::zeros         1.75%      37.000us         3.02%      64.000us      16.000us      90.36 Kb     -39.85 Kb             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        89.70%       1.899ms        96.79%       2.049ms       2.049ms      90.34 Kb    -101.00 Kb             1  
+                                   aten::flatten         2.31%      49.000us         4.58%      97.000us      19.400us      50.50 Kb           0 b             5  
+                                aten::empty_like         0.09%       2.000us         0.14%       3.000us       3.000us      50.50 Kb           0 b             1  
+                             aten::empty_strided         0.14%       3.000us         0.14%       3.000us       3.000us      50.50 Kb      50.50 Kb             1  
+                                 model_inference         1.32%      28.000us        98.25%       2.080ms       2.080ms      50.50 Kb     -39.85 Kb             1  
+                                     aten::zero_         0.94%      20.000us         0.94%      20.000us       5.000us      39.85 Kb      39.85 Kb             4  
+                            aten::_reshape_alias         0.14%       3.000us         0.14%       3.000us       0.750us           0 b           0 b             4  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.117ms
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  2.049ms
+mem usage:  92512 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0026464462280273438 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::empty         0.34%       9.000us         0.34%       9.000us       1.286us     141.11 Kb     141.11 Kb             7  
+                                   aten::clone         0.45%      12.000us         2.01%      54.000us      27.000us     101.00 Kb           0 b             2  
+                                   aten::zeros         0.78%      21.000us         1.34%      36.000us       9.000us      90.36 Kb           0 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        94.55%       2.534ms        98.06%       2.628ms       2.628ms      90.34 Kb    -101.00 Kb             1  
+                                 aten::flatten         0.63%      17.000us         2.50%      67.000us      13.400us      50.50 Kb           0 b             5  
+                              aten::empty_like         0.15%       4.000us         0.19%       5.000us       5.000us      50.50 Kb           0 b             1  
+                           aten::empty_strided         0.11%       3.000us         0.11%       3.000us       3.000us      50.50 Kb      50.50 Kb             1  
+                               model_inference         1.12%      30.000us        99.29%       2.661ms       2.661ms      50.50 Kb     -40.11 Kb             1  
+                                   aten::zero_         0.30%       8.000us         0.30%       8.000us       2.000us           0 b           0 b             4  
+                          aten::_reshape_alias         0.22%       6.000us         0.22%       6.000us       1.500us           0 b           0 b             4  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.680ms
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  2.628ms
+mem usage:  92512 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:14 129269:129269 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:14 129269:129269 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:18 129269:129269 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:18 129269:129269 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 101 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0009233951568603516 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         1.02%      10.000us         1.02%      10.000us       1.429us     104.16 Kb     104.16 Kb             7  
+                    aten::clone         2.36%      23.000us         5.84%      57.000us      28.500us     101.00 Kb           0 b             2  
+                    aten::zeros         4.00%      39.000us         6.66%      65.000us      16.250us      53.66 Kb           4 b             4  
+    REFERENCE - FUSED ATTENTION        64.24%     627.000us        92.83%     906.000us     906.000us      53.65 Kb     -50.50 Kb             1  
+               aten::empty_like         0.31%       3.000us         0.41%       4.000us       4.000us      50.50 Kb           0 b             1  
+            aten::empty_strided         0.20%       2.000us         0.20%       2.000us       2.000us      50.50 Kb      50.50 Kb             1  
+                model_inference         2.87%      28.000us        96.00%     937.000us     937.000us      50.50 Kb      -3.16 Kb             1  
+                    aten::zero_         1.95%      19.000us         1.95%      19.000us       4.750us           4 b           4 b             4  
+                  aten::flatten        10.55%     103.000us        15.57%     152.000us       2.764us           0 b     -50.50 Kb            55  
+           aten::_reshape_alias         0.51%       5.000us         0.51%       5.000us       0.093us           0 b           0 b            54  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 976.000us
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  0.906ms
+mem usage:  54940 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.0008778572082519531 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::clone         0.99%       9.000us         4.19%      38.000us      19.000us     101.00 Kb           0 b             2  
+                  aten::zeros         1.66%      15.000us         2.87%      26.000us       5.200us      54.06 Kb         408 b             5  
+                  aten::empty         0.88%       8.000us         0.88%       8.000us       1.000us      53.92 Kb      53.92 Kb             8  
+    STUDENT - FUSED ATTENTION        73.73%     668.000us        95.25%     863.000us     863.000us      53.65 Kb     -51.29 Kb             1  
+             aten::empty_like         0.33%       3.000us         0.33%       3.000us       3.000us      50.50 Kb      50.50 Kb             1  
+          aten::empty_strided         0.22%       2.000us         0.22%       2.000us       2.000us      50.50 Kb      50.50 Kb             1  
+              model_inference         2.76%      25.000us        98.23%     890.000us     890.000us      50.50 Kb      -3.42 Kb             1  
+                  aten::zero_         0.55%       5.000us         0.55%       5.000us       1.000us         404 b         404 b             5  
+                aten::flatten         6.95%      63.000us        10.49%      95.000us       1.696us           0 b     -50.50 Kb            56  
+         aten::_reshape_alias         0.44%       4.000us         0.44%       4.000us       0.074us           0 b           0 b            54  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 906.000us
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  0.863ms
+mem usage:  54940 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:19 129397:129397 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:19 129397:129397 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:22 129397:129397 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:22 129397:129397 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 500 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.05610918998718262 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.06%      32.000us         0.06%      32.000us       4.571us       1.44 Mb       1.44 Mb             7  
+                    aten::zeros         0.08%      45.000us         0.46%     261.000us      65.250us       1.20 Mb           0 b             4  
+    REFERENCE - NAIVE ATTENTION        98.88%      55.547ms        99.84%      56.085ms      56.085ms       1.20 Mb    -500.26 Kb             1  
+                    aten::clone         0.07%      41.000us         0.46%     260.000us     130.000us     500.00 Kb           0 b             2  
+                  aten::flatten         0.09%      51.000us         0.32%     182.000us      36.400us     250.00 Kb           0 b             5  
+               aten::empty_like         0.01%       3.000us         0.02%      12.000us      12.000us     250.00 Kb           0 b             1  
+            aten::empty_strided         0.04%      23.000us         0.04%      23.000us      23.000us     250.00 Kb     250.00 Kb             1  
+                model_inference         0.07%      40.000us        99.92%      56.128ms      56.128ms     250.00 Kb    -976.82 Kb             1  
+                    aten::zero_         0.08%      47.000us         0.36%     200.000us      50.000us           0 b           0 b             4  
+                    aten::fill_         0.27%     153.000us         0.27%     153.000us      76.500us           0 b           0 b             2  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 56.174ms
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  56.085ms
+mem usage:  1255996 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.08014917373657227 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.04%      35.000us         0.04%      35.000us       5.000us       1.44 Mb       1.44 Mb             7  
+                  aten::zeros         0.03%      26.000us         0.26%     205.000us      51.250us       1.20 Mb           0 b             4  
+    STUDENT - NAIVE ATTENTION        87.50%      70.169ms        99.89%      80.106ms      80.106ms       1.20 Mb    -500.00 Kb             1  
+                  aten::clone         0.04%      36.000us        12.11%       9.715ms       4.857ms     500.00 Kb           0 b             2  
+                aten::flatten         0.04%      30.000us         0.20%     164.000us      32.800us     250.00 Kb           0 b             5  
+             aten::empty_like         0.01%       5.000us         0.01%       7.000us       7.000us     250.00 Kb           0 b             1  
+          aten::empty_strided         0.04%      33.000us         0.04%      33.000us      33.000us     250.00 Kb     250.00 Kb             1  
+              model_inference         0.08%      61.000us        99.97%      80.172ms      80.172ms     250.00 Kb    -976.82 Kb             1  
+                  aten::zero_         0.01%      11.000us         0.19%     149.000us      37.250us           0 b           0 b             4  
+                  aten::fill_         0.17%     138.000us         0.17%     138.000us      69.000us           0 b           0 b             2  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 80.197ms
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  80.106ms
+mem usage:  1255996 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:26 129538:129538 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:26 129538:129538 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:30 129538:129538 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:30 129538:129538 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 500 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.03899049758911133 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         0.05%      21.000us         0.05%      21.000us       3.000us       1.44 Mb       1.44 Mb             7  
+                                     aten::zeros         0.09%      34.000us         0.56%     218.000us      54.500us       1.20 Mb           0 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        98.68%      38.523ms        99.82%      38.968ms      38.968ms       1.20 Mb    -500.26 Kb             1  
+                                     aten::clone         0.09%      34.000us         0.55%     215.000us     107.500us     500.00 Kb           0 b             2  
+                                   aten::flatten         0.11%      42.000us         0.37%     143.000us      28.600us     250.00 Kb           0 b             5  
+                                aten::empty_like         0.01%       2.000us         0.02%       6.000us       6.000us     250.00 Kb           0 b             1  
+                             aten::empty_strided         0.03%      13.000us         0.03%      13.000us      13.000us     250.00 Kb     250.00 Kb             1  
+                                 model_inference         0.08%      32.000us        99.91%      39.003ms      39.003ms     250.00 Kb    -976.57 Kb             1  
+                                     aten::zero_         0.11%      41.000us         0.43%     168.000us      42.000us           0 b           0 b             4  
+                                     aten::fill_         0.33%     127.000us         0.33%     127.000us      63.500us           0 b           0 b             2  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 39.038ms
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  38.968ms
+mem usage:  1255996 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.04021739959716797 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::empty         0.05%      22.000us         0.05%      22.000us       3.143us       1.44 Mb       1.44 Mb             7  
+                                   aten::zeros         0.04%      18.000us         0.33%     133.000us      33.250us       1.20 Mb           4 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        98.75%      39.742ms        99.87%      40.195ms      40.195ms       1.20 Mb    -250.26 Kb             1  
+                                   aten::clone         0.27%     109.000us         0.56%     225.000us     112.500us     500.00 Kb           0 b             2  
+                              aten::empty_like         0.01%       4.000us         0.02%      10.000us      10.000us     250.00 Kb           0 b             1  
+                           aten::empty_strided         0.03%      13.000us         0.03%      13.000us      13.000us     250.00 Kb     250.00 Kb             1  
+                               model_inference         0.08%      32.000us        99.96%      40.230ms      40.230ms     250.00 Kb    -976.83 Kb             1  
+                                   aten::zero_         0.02%       7.000us         0.25%     100.000us      25.000us           4 b           4 b             4  
+                                   aten::fill_         0.23%      93.000us         0.23%      93.000us      46.500us           0 b           0 b             2  
+                                 aten::flatten         0.04%      15.000us         0.34%     135.000us      27.000us           0 b    -250.00 Kb             5  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 40.247ms
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  40.195ms
+mem usage:  1255996 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:34 129740:129740 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:34 129740:129740 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:38 129740:129740 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:38 129740:129740 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 500 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.00878143310546875 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.24%      21.000us         0.24%      21.000us       3.000us     500.27 Kb     500.27 Kb             7  
+                    aten::clone         0.29%      26.000us         1.83%     162.000us      81.000us     500.00 Kb           0 b             2  
+                    aten::zeros         0.45%      40.000us         1.71%     151.000us      37.750us     265.63 Kb           4 b             4  
+    REFERENCE - FUSED ATTENTION        89.57%       7.917ms        99.14%       8.763ms       8.763ms     265.62 Kb    -500.26 Kb             1  
+                  aten::flatten         3.48%     308.000us         4.68%     414.000us       1.630us     250.00 Kb           0 b           254  
+               aten::empty_like         0.05%       4.000us         0.08%       7.000us       7.000us     250.00 Kb           0 b             1  
+            aten::empty_strided         0.06%       5.000us         0.06%       5.000us       5.000us     250.00 Kb     250.00 Kb             1  
+                model_inference         0.32%      28.000us        99.47%       8.792ms       8.792ms     250.00 Kb     -15.63 Kb             1  
+                    aten::zero_         0.44%      39.000us         1.06%      94.000us      23.500us      15.62 Kb      15.62 Kb             4  
+                    aten::fill_         0.62%      55.000us         0.62%      55.000us      55.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 8.839ms
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  8.763ms
+mem usage:  271996 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.008464574813842773 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.13%      11.000us         0.13%      11.000us       1.375us     515.89 Kb     515.89 Kb             8  
+                  aten::clone         0.12%      10.000us         1.40%     119.000us      59.500us     500.00 Kb           0 b             2  
+                  aten::zeros         0.22%      19.000us         0.55%      47.000us       9.400us     267.59 Kb     -13.67 Kb             5  
+    STUDENT - FUSED ATTENTION        91.39%       7.761ms        99.46%       8.446ms       8.446ms     265.62 Kb    -501.96 Kb             1  
+                aten::flatten         3.14%     267.000us         3.87%     329.000us       1.290us     250.00 Kb           0 b           255  
+             aten::empty_like         0.04%       3.000us         0.05%       4.000us       4.000us     250.00 Kb           0 b             1  
+          aten::empty_strided         0.13%      11.000us         0.13%      11.000us      11.000us     250.00 Kb     250.00 Kb             1  
+              model_inference         0.32%      27.000us        99.81%       8.476ms       8.476ms     250.00 Kb     -15.89 Kb             1  
+                  aten::zero_         0.08%       7.000us         0.24%      20.000us       4.000us      15.63 Kb      15.63 Kb             5  
+                  aten::fill_         0.15%      13.000us         0.15%      13.000us      13.000us           0 b           0 b             1  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 8.492ms
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  8.446ms
+mem usage:  271996 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:41 130440:130440 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:41 130440:130440 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:45 130440:130440 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:45 130440:130440 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 1024 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.2328805923461914 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.01%      24.000us         0.01%      24.000us       3.429us       5.00 Mb       5.00 Mb             7  
+                    aten::zeros         0.01%      34.000us         0.17%     388.000us      97.000us       4.50 Mb           4 b             4  
+    REFERENCE - NAIVE ATTENTION        99.70%     232.221ms        99.97%     232.859ms     232.859ms       4.50 Mb      -1.00 Mb             1  
+                    aten::clone         0.02%      35.000us         0.10%     232.000us     116.000us       1.00 Mb           0 b             2  
+                  aten::flatten         0.02%      46.000us         0.06%     144.000us      28.800us     512.00 Kb           0 b             5  
+               aten::empty_like         0.00%       3.000us         0.00%       8.000us       8.000us     512.00 Kb           0 b             1  
+            aten::empty_strided         0.01%      16.000us         0.01%      16.000us      16.000us     512.00 Kb     512.00 Kb             1  
+                model_inference         0.01%      31.000us        99.98%     232.892ms     232.892ms     512.00 Kb      -4.00 Mb             1  
+                    aten::zero_         0.02%      39.000us         0.14%     337.000us      84.250us           0 b           0 b             4  
+                    aten::fill_         0.13%     298.000us         0.13%     298.000us     149.000us           0 b           0 b             2  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 232.927ms
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  232.859ms
+mem usage:  4718588 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.23138952255249023 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.01%      13.000us         0.01%      13.000us       1.857us       5.00 Mb       5.00 Mb             7  
+                  aten::zeros        -0.02%     -44.000us         0.05%     116.000us      29.000us       4.50 Mb           4 b             4  
+    STUDENT - NAIVE ATTENTION        99.83%     231.030ms        99.97%     231.362ms     231.362ms       4.50 Mb      -1.00 Mb             1  
+                  aten::clone         0.01%      23.000us         0.09%     202.000us     101.000us       1.00 Mb           0 b             2  
+                aten::flatten         0.01%      24.000us         0.04%      96.000us      19.200us     512.00 Kb           0 b             5  
+             aten::empty_like         0.00%       5.000us         0.00%       7.000us       7.000us     512.00 Kb           0 b             1  
+          aten::empty_strided         0.01%      17.000us         0.01%      17.000us      17.000us     512.00 Kb     512.00 Kb             1  
+              model_inference         0.02%      40.000us        99.99%     231.405ms     231.405ms     512.00 Kb      -4.00 Mb             1  
+                  aten::zero_         0.03%      72.000us         0.04%      85.000us      21.250us           4 b           4 b             4  
+                  aten::fill_         0.03%      79.000us         0.03%      79.000us      39.500us           0 b           0 b             2  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 231.425ms
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  231.362ms
+mem usage:  4718588 bytes
+
+Errors:
+STAGE:2023-12-04 23:16:50 130621:130621 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:51 130621:130621 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:16:56 130621:130621 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:16:56 130621:130621 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 1024 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.1593914031982422 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::zeros         0.03%      44.000us         0.25%     399.000us      99.750us       4.50 Mb           4 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        99.54%     158.714ms        99.95%     159.369ms     159.369ms       4.50 Mb      -1.00 Mb             1  
+                                     aten::zero_         0.03%      40.000us         0.21%     336.000us      84.000us       4.00 Mb       4.00 Mb             4  
+                                     aten::empty         0.02%      27.000us         0.02%      27.000us       3.857us       1.00 Mb       1.00 Mb             7  
+                                     aten::clone         0.02%      36.000us         0.15%     246.000us     123.000us       1.00 Mb           0 b             2  
+                                   aten::flatten         0.03%      48.000us         0.09%     151.000us      30.200us     512.00 Kb           0 b             5  
+                                aten::empty_like         0.00%       4.000us         0.01%      11.000us      11.000us     512.00 Kb           0 b             1  
+                             aten::empty_strided         0.01%      20.000us         0.01%      20.000us      20.000us     512.00 Kb     512.00 Kb             1  
+                                 model_inference         0.02%      37.000us        99.97%     159.408ms     159.408ms     512.00 Kb      -4.00 Mb             1  
+                                     aten::fill_         0.19%     296.000us         0.19%     296.000us     148.000us           0 b           0 b             2  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 159.452ms
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  159.369ms
+mem usage:  4718588 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.15974831581115723 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::zeros         0.01%      15.000us         0.18%     283.000us      70.750us       4.50 Mb           4 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        99.71%     159.308ms        99.97%     159.727ms     159.727ms       4.50 Mb      -1.00 Mb             1  
+                                   aten::zero_         0.00%       7.000us         0.16%     252.000us      63.000us       4.00 Mb       4.00 Mb             4  
+                                   aten::empty         0.01%      18.000us         0.01%      18.000us       2.571us       1.00 Mb       1.00 Mb             7  
+                                   aten::clone         0.03%      52.000us         0.08%     131.000us      65.500us       1.00 Mb           0 b             2  
+                                 aten::flatten        -0.01%     -16.000us         0.04%      63.000us      12.600us     512.00 Kb           0 b             5  
+                              aten::empty_like         0.00%       3.000us         0.00%       4.000us       4.000us     512.00 Kb           0 b             1  
+                           aten::empty_strided         0.00%       7.000us         0.00%       7.000us       7.000us     512.00 Kb     512.00 Kb             1  
+                               model_inference         0.02%      33.000us        99.99%     159.762ms     159.762ms     512.00 Kb      -4.00 Mb             1  
+                                   aten::fill_         0.15%     245.000us         0.15%     245.000us     122.500us           0 b           0 b             2  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 159.778ms
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  159.727ms
+mem usage:  4718588 bytes
+
+Errors:
+STAGE:2023-12-04 23:17:01 130966:130966 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:01 130966:130966 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:17:06 130966:130966 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:06 130966:130966 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 1024 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.033858537673950195 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.06%      21.000us         0.06%      21.000us       3.000us       1.03 Mb       1.03 Mb             7  
+                    aten::clone         0.08%      28.000us         0.52%     176.000us      88.000us       1.00 Mb           0 b             2  
+                    aten::zeros         0.20%      67.000us         0.60%     203.000us      50.750us     544.01 Kb           0 b             4  
+    REFERENCE - FUSED ATTENTION        95.48%      32.403ms        99.71%      33.838ms      33.838ms     544.00 Kb      -1.00 Mb             1  
+                  aten::flatten         1.70%     576.000us         2.04%     693.000us       1.343us     512.00 Kb           0 b           516  
+               aten::empty_like         0.01%       3.000us         0.03%       9.000us       9.000us     512.00 Kb           0 b             1  
+            aten::empty_strided         0.02%       7.000us         0.02%       7.000us       7.000us     512.00 Kb     512.00 Kb             1  
+                model_inference         0.09%      29.000us        99.80%      33.870ms      33.870ms     512.00 Kb     -32.26 Kb             1  
+                    aten::zero_         0.15%      50.000us         0.36%     122.000us      30.500us           0 b           0 b             4  
+                    aten::fill_         0.21%      72.000us         0.21%      72.000us      72.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 33.938ms
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  33.838ms
+mem usage:  557052 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.032564401626586914 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.03%       9.000us         0.03%       9.000us       1.125us       1.03 Mb       1.03 Mb             8  
+                  aten::clone         0.14%      47.000us         0.27%      87.000us      43.500us       1.00 Mb     512.00 Kb             2  
+                  aten::zeros         0.05%      17.000us         0.15%      49.000us       9.800us     548.01 Kb     -32.00 Kb             5  
+    STUDENT - FUSED ATTENTION        96.20%      31.355ms        99.85%      32.544ms      32.544ms     544.00 Kb      -1.00 Mb             1  
+                aten::flatten         1.54%     501.000us         1.79%     585.000us       1.132us     512.00 Kb           0 b           517  
+             aten::empty_like         0.01%       3.000us         0.02%       5.000us       5.000us     512.00 Kb           0 b             1  
+              model_inference         0.10%      31.000us        99.95%      32.576ms      32.576ms     512.00 Kb     -32.27 Kb             1  
+                  aten::zero_         0.02%       7.000us         0.08%      25.000us       5.000us      36.00 Kb      36.00 Kb             5  
+                  aten::fill_         0.06%      18.000us         0.06%      18.000us      18.000us           0 b           0 b             1  
+         aten::_reshape_alias         0.02%       7.000us         0.02%       7.000us       0.014us           0 b           0 b           515  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 32.592ms
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  32.544ms
+mem usage:  557052 bytes
+
+Errors:
+STAGE:2023-12-04 23:17:12 131158:131158 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:12 131158:131158 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:17:17 131158:131158 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:17 131158:131158 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 2047 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.930849552154541 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.00%      32.000us         0.00%      32.000us       4.571us      17.98 Mb      17.98 Mb             7  
+                    aten::zeros         0.00%      37.000us         0.11%       1.014ms     253.500us      16.98 Mb           4 b             4  
+    REFERENCE - NAIVE ATTENTION        99.77%     928.778ms        99.92%     930.127ms     930.127ms      16.98 Mb      -2.00 Mb             1  
+                    aten::clone         0.00%      42.000us         0.03%     309.000us     154.500us       2.00 Mb           0 b             2  
+                  aten::flatten         0.01%      53.000us         0.02%     201.000us      40.200us    1023.50 Kb           0 b             5  
+               aten::empty_like         0.00%       4.000us         0.00%      10.000us      10.000us    1023.50 Kb           0 b             1  
+            aten::empty_strided         0.00%      21.000us         0.00%      21.000us      21.000us    1023.50 Kb    1023.50 Kb             1  
+                model_inference         0.08%     738.000us       100.00%     930.867ms     930.867ms    1023.50 Kb     -15.98 Mb             1  
+                    aten::zero_         0.00%      30.000us         0.10%     953.000us     238.250us           0 b           0 b             4  
+                    aten::fill_         0.10%     923.000us         0.10%     923.000us     461.500us           0 b           0 b             2  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 930.906ms
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  930.127ms
+mem usage:  17808896 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.9597313404083252 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.00%      41.000us         0.00%      41.000us       5.857us      17.98 Mb      17.98 Mb             7  
+                  aten::zeros         0.00%      20.000us         0.12%       1.183ms     295.750us      16.98 Mb           4 b             4  
+    STUDENT - NAIVE ATTENTION        99.83%     958.156ms        99.99%     959.710ms     959.710ms      16.98 Mb      -2.00 Mb             1  
+                  aten::clone         0.00%      28.000us         0.04%     348.000us     174.000us       2.00 Mb           0 b             2  
+                aten::flatten         0.00%      28.000us         0.02%     225.000us      45.000us    1023.50 Kb           0 b             5  
+             aten::empty_like         0.00%       5.000us         0.00%      15.000us      15.000us    1023.50 Kb           0 b             1  
+          aten::empty_strided         0.00%      25.000us         0.00%      25.000us      25.000us    1023.50 Kb    1023.50 Kb             1  
+              model_inference         0.00%      32.000us       100.00%     959.744ms     959.744ms    1023.50 Kb     -15.98 Mb             1  
+                  aten::zero_         0.00%      10.000us         0.12%       1.134ms     283.500us           4 b           4 b             4  
+                  aten::fill_         0.12%       1.124ms         0.12%       1.124ms     562.000us           0 b           0 b             2  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 959.764ms
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  959.71ms
+mem usage:  17808896 bytes
+
+Errors:
+STAGE:2023-12-04 23:17:27 131630:131630 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:28 131630:131630 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:17:35 131630:131630 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:36 131630:131630 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 2047 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.6418321132659912 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         0.00%      30.000us         0.00%      30.000us       4.286us      17.98 Mb      17.98 Mb             7  
+                                     aten::zeros         0.01%      39.000us         0.16%       1.034ms     258.500us      16.98 Mb           0 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        99.62%     639.463ms        99.83%     640.819ms     640.819ms      16.98 Mb      -2.00 Mb             1  
+                                     aten::clone         0.01%      38.000us         0.05%     296.000us     148.000us       2.00 Mb           0 b             2  
+                                   aten::flatten         0.01%      56.000us         0.03%     193.000us      38.600us    1023.50 Kb           0 b             5  
+                                aten::empty_like         0.00%       3.000us         0.00%       9.000us       9.000us    1023.50 Kb           0 b             1  
+                             aten::empty_strided         0.00%      19.000us         0.00%      19.000us      19.000us    1023.50 Kb    1023.50 Kb             1  
+                                 model_inference         0.16%       1.032ms        99.99%     641.854ms     641.854ms    1023.50 Kb     -15.98 Mb             1  
+                                     aten::zero_         0.00%      29.000us         0.15%     972.000us     243.000us           4 b           4 b             4  
+                                     aten::fill_         0.15%     943.000us         0.15%     943.000us     471.500us           0 b           0 b             2  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 641.894ms
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  640.819ms
+mem usage:  17808896 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.6399075984954834 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::zeros         0.00%      17.000us         0.20%       1.248ms     312.000us      16.98 Mb           4 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        99.74%     638.290ms        99.99%     639.889ms     639.889ms      16.98 Mb      -2.00 Mb             1  
+                                   aten::zero_         0.00%       7.000us         0.19%       1.209ms     302.250us      15.98 Mb      15.98 Mb             4  
+                                   aten::empty         0.01%      32.000us         0.01%      32.000us       4.571us       2.00 Mb       2.00 Mb             7  
+                                   aten::clone         0.00%      18.000us         0.05%     340.000us     170.000us       2.00 Mb           0 b             2  
+                                 aten::flatten         0.00%      20.000us         0.03%     166.000us      33.200us    1023.50 Kb           0 b             5  
+                              aten::empty_like         0.00%       3.000us         0.00%      11.000us      11.000us    1023.50 Kb           0 b             1  
+                           aten::empty_strided         0.00%      18.000us         0.00%      18.000us      18.000us    1023.50 Kb    1023.50 Kb             1  
+                               model_inference         0.00%      28.000us       100.00%     639.919ms     639.919ms    1023.50 Kb     -15.98 Mb             1  
+                                   aten::fill_         0.19%       1.202ms         0.19%       1.202ms     601.000us           0 b           0 b             2  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 639.937ms
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  639.889ms
+mem usage:  17808896 bytes
+
+Errors:
+STAGE:2023-12-04 23:17:45 132318:132318 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:46 132318:132318 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:17:53 132318:132318 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:17:54 132318:132318 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 2047 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.12852692604064941 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.02%      25.000us         0.02%      25.000us       3.571us       2.00 Mb       2.00 Mb             7  
+                    aten::clone         0.02%      31.000us         0.19%     245.000us     122.500us       2.00 Mb           0 b             2  
+                    aten::zeros         0.03%      36.000us         0.15%     187.000us      46.750us       1.06 Mb           4 b             4  
+    REFERENCE - FUSED ATTENTION        97.95%     125.941ms        99.94%     128.505ms     128.505ms       1.06 Mb      -2.00 Mb             1  
+                  aten::flatten         0.85%       1.098ms         0.97%       1.251ms       1.217us    1023.50 Kb           0 b          1028  
+               aten::empty_like         0.00%       3.000us         0.01%      11.000us      11.000us    1023.50 Kb           0 b             1  
+            aten::empty_strided         0.01%      10.000us         0.01%      10.000us      10.000us    1023.50 Kb    1023.50 Kb             1  
+                model_inference         0.03%      35.000us        99.97%     128.542ms     128.542ms    1023.50 Kb     -64.23 Kb             1  
+                    aten::zero_         0.02%      30.000us         0.11%     136.000us      34.000us      63.97 Kb      63.97 Kb             4  
+                    aten::fill_         0.08%     106.000us         0.08%     106.000us     106.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 128.579ms
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  128.505ms
+mem usage:  1113564 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.1479640007019043 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.02%      32.000us         0.02%      32.000us       4.000us       2.01 Mb       2.01 Mb             8  
+                  aten::clone         0.01%      19.000us         0.20%     296.000us     148.000us       2.00 Mb           0 b             2  
+                  aten::zeros         0.01%      17.000us         0.11%     165.000us      33.000us       1.07 Mb           4 b             5  
+    STUDENT - FUSED ATTENTION        97.11%     143.724ms        99.96%     147.942ms     147.942ms       1.06 Mb      -2.01 Mb             1  
+                aten::flatten         0.96%       1.420ms         1.33%       1.962ms       1.907us    1023.50 Kb           0 b          1029  
+             aten::empty_like         0.00%       5.000us         0.01%      17.000us      17.000us    1023.50 Kb           0 b             1  
+          aten::empty_strided         0.01%      17.000us         0.01%      17.000us      17.000us    1023.50 Kb    1023.50 Kb             1  
+              model_inference         0.02%      31.000us        99.99%     147.975ms     147.975ms    1023.50 Kb     -63.98 Kb             1  
+                  aten::zero_         0.01%      13.000us         0.09%     129.000us      25.800us      63.97 Kb      63.97 Kb             5  
+                  aten::fill_         0.08%     116.000us         0.08%     116.000us     116.000us           0 b           0 b             1  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 147.994ms
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  147.942ms
+mem usage:  1113564 bytes
+
+Errors:
+STAGE:2023-12-04 23:18:03 132717:132717 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:18:03 132717:132717 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:18:11 132717:132717 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:18:11 132717:132717 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part1---------------N = 3111 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 1 Test: Naive Unfused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  2.1711437702178955 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.00%      42.000us         0.00%      42.000us       6.000us      39.96 Mb      39.96 Mb             7  
+                    aten::zeros         0.00%      43.000us         0.12%       2.580ms     645.000us      38.44 Mb           4 b             4  
+    REFERENCE - NAIVE ATTENTION        99.75%        2.166s        99.90%        2.169s        2.169s      38.44 Mb      -3.04 Mb             1  
+                    aten::clone         0.00%      45.000us         0.02%     510.000us     255.000us       3.04 Mb           0 b             2  
+                  aten::flatten         0.00%      72.000us         0.02%     374.000us      74.800us       1.52 Mb           0 b             5  
+               aten::empty_like         0.00%       6.000us         0.00%      15.000us      15.000us       1.52 Mb           0 b             1  
+            aten::empty_strided         0.00%      18.000us         0.00%      18.000us      18.000us       1.52 Mb       1.52 Mb             1  
+                model_inference         0.10%       2.233ms       100.00%        2.171s        2.171s       1.52 Mb     -36.92 Mb             1  
+                    aten::zero_         0.00%      35.000us         0.12%       2.505ms     626.250us           0 b           0 b             4  
+                    aten::fill_         0.11%       2.470ms         0.11%       2.470ms       1.235ms           0 b           0 b             2  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.171s
+
+REFERENCE - NAIVE ATTENTION statistics
+cpu time:  2168.935ms
+mem usage:  40306112 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  2.1782336235046387 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.00%      46.000us         0.00%      46.000us       6.571us      39.96 Mb      39.96 Mb             7  
+                  aten::zeros         0.00%      22.000us         0.12%       2.682ms     670.500us      38.44 Mb           4 b             4  
+    STUDENT - NAIVE ATTENTION        99.75%        2.173s        99.89%        2.176s        2.176s      38.44 Mb      -3.04 Mb             1  
+                  aten::clone         0.00%      26.000us         0.02%     466.000us     233.000us       3.04 Mb           0 b             2  
+                aten::flatten         0.00%      31.000us         0.01%     316.000us      63.200us       1.52 Mb           0 b             5  
+             aten::empty_like         0.00%       5.000us         0.00%      17.000us      17.000us       1.52 Mb           0 b             1  
+          aten::empty_strided         0.00%      19.000us         0.00%      19.000us      19.000us       1.52 Mb       1.52 Mb             1  
+              model_inference         0.11%       2.290ms       100.00%        2.178s        2.178s       1.52 Mb     -36.92 Mb             1  
+                  aten::zero_         0.00%      10.000us         0.12%       2.627ms     656.750us           4 b           4 b             4  
+                  aten::fill_         0.12%       2.617ms         0.12%       2.617ms       1.308ms           0 b           0 b             2  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.178s
+
+STUDENT - NAIVE ATTENTION statistics
+cpu time:  2175.961ms
+mem usage:  40306112 bytes
+
+Errors:
+STAGE:2023-12-04 23:18:25 132989:132989 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:18:27 132989:132989 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:18:36 132989:132989 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:18:39 132989:132989 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part2---------------N = 3111 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 2 Test: Unfused Attention with Blocked Matmul
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  1.488520860671997 
+
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                            Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                     aten::empty         0.00%      40.000us         0.00%      40.000us       5.714us      39.96 Mb      39.96 Mb             7  
+                                     aten::zeros         0.00%      41.000us         0.15%       2.172ms     543.000us      38.44 Mb           0 b             4  
+    REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX        99.72%        1.484s        99.89%        1.487s        1.487s      38.44 Mb      -3.04 Mb             1  
+                                     aten::clone         0.00%      42.000us         0.03%     379.000us     189.500us       3.04 Mb           0 b             2  
+                                   aten::flatten         0.00%      61.000us         0.02%     247.000us      49.400us       1.52 Mb           0 b             5  
+                                aten::empty_like         0.00%       5.000us         0.00%      13.000us      13.000us       1.52 Mb           0 b             1  
+                             aten::empty_strided         0.00%      20.000us         0.00%      20.000us      20.000us       1.52 Mb       1.52 Mb             1  
+                                 model_inference         0.10%       1.534ms       100.00%        1.489s        1.489s       1.52 Mb     -36.92 Mb             1  
+                                     aten::zero_         0.00%      32.000us         0.14%       2.101ms     525.250us           0 b           0 b             4  
+                                     aten::fill_         0.14%       2.069ms         0.14%       2.069ms       1.034ms           0 b           0 b             2  
+------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 1.489s
+
+REFERENCE - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  1487.008ms
+mem usage:  40306112 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  1.5257251262664795 
+
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                          Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                   aten::zeros         0.00%      19.000us         0.17%       2.621ms     655.250us      38.44 Mb           4 b             4  
+    STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX        99.68%        1.521s        99.89%        1.524s        1.524s      38.44 Mb      -3.04 Mb             1  
+                                   aten::zero_         0.00%      10.000us         0.17%       2.569ms     642.250us      36.92 Mb      36.92 Mb             4  
+                                   aten::empty         0.00%      45.000us         0.00%      45.000us       6.429us       3.04 Mb       3.04 Mb             7  
+                                   aten::clone         0.00%      23.000us         0.04%     567.000us     283.500us       3.04 Mb           0 b             2  
+                                 aten::flatten         0.00%      22.000us         0.02%     365.000us      73.000us       1.52 Mb           0 b             5  
+                              aten::empty_like         0.00%       3.000us         0.00%      15.000us      15.000us       1.52 Mb           0 b             1  
+                           aten::empty_strided         0.00%      21.000us         0.00%      21.000us      21.000us       1.52 Mb       1.52 Mb             1  
+                               model_inference         0.11%       1.657ms       100.00%        1.526s        1.526s       1.52 Mb     -36.92 Mb             1  
+                                   aten::fill_         0.17%       2.559ms         0.17%       2.559ms       1.280ms           0 b           0 b             2  
+----------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 1.526s
+
+STUDENT - BLOCKED MATMUL + UNFUSED SOFTMAX statistics
+cpu time:  1524.095ms
+mem usage:  40306112 bytes
+
+Errors:
+STAGE:2023-12-04 23:18:52 133462:133462 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:18:54 133462:133462 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:19:03 133462:133462 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:19:05 133462:133462 ActivityProfilerController.cpp:300] Completed Stage: Collection
+-------------Part3---------------N = 3111 
+
+Compiling code into a PyTorch module...
+
+
+Running Part 3 Test: Fused Attention
+
+-----RUNNING REFERENCE IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.312283992767334 
+
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                           Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                    aten::empty         0.01%      29.000us         0.01%      29.000us       4.143us       3.13 Mb       3.13 Mb             7  
+                    aten::clone         0.01%      34.000us         0.12%     370.000us     185.000us       3.04 Mb           0 b             2  
+                    aten::zeros         0.02%      52.000us         0.08%     260.000us      65.000us       1.61 Mb     -97.21 Kb             4  
+    REFERENCE - FUSED ATTENTION        98.68%     308.217ms        99.97%     312.260ms     312.260ms       1.61 Mb      -3.04 Mb             1  
+                  aten::flatten         0.54%       1.700ms         0.60%       1.877ms       1.203us       1.52 Mb           0 b          1560  
+               aten::empty_like         0.00%       5.000us         0.00%      14.000us      14.000us       1.52 Mb           0 b             1  
+            aten::empty_strided         0.00%      11.000us         0.00%      11.000us      11.000us       1.52 Mb       1.52 Mb             1  
+                model_inference         0.01%      36.000us        99.98%     312.299ms     312.299ms       1.52 Mb     -97.48 Kb             1  
+                    aten::zero_         0.01%      36.000us         0.06%     193.000us      48.250us      97.22 Kb      97.22 Kb             4  
+                    aten::fill_         0.05%     157.000us         0.05%     157.000us     157.000us           0 b           0 b             1  
+-------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 312.353ms
+
+REFERENCE - FUSED ATTENTION statistics
+cpu time:  312.26ms
+mem usage:  1692380 bytes
+-----RUNNING STUDENT IMPLEMENTATION-----
+
+manual attention == pytorch attention True
+Manual Execution Time:  0.30797433853149414 
+
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                         Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg       CPU Mem  Self CPU Mem    # of Calls  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                  aten::empty         0.01%      31.000us         0.01%      31.000us       3.875us       3.13 Mb       3.13 Mb             8  
+                  aten::clone         0.01%      16.000us         0.11%     337.000us     168.500us       3.04 Mb           0 b             2  
+                  aten::zeros         0.01%      17.000us         0.07%     208.000us      41.600us       1.63 Mb           4 b             5  
+    STUDENT - FUSED ATTENTION        98.56%     303.580ms        99.98%     307.952ms     307.952ms       1.61 Mb      -3.05 Mb             1  
+                aten::flatten         0.53%       1.637ms         0.59%       1.832ms       1.174us       1.52 Mb           0 b          1561  
+             aten::empty_like         0.00%       3.000us         0.00%      15.000us      15.000us       1.52 Mb           0 b             1  
+          aten::empty_strided         0.01%      21.000us         0.01%      21.000us      21.000us       1.52 Mb       1.52 Mb             1  
+              model_inference         0.01%      33.000us        99.99%     307.987ms     307.987ms       1.52 Mb     -97.48 Kb             1  
+                  aten::zero_         0.00%      14.000us         0.06%     173.000us      34.600us      12.16 Kb      12.16 Kb             5  
+                  aten::fill_         0.05%     159.000us         0.05%     159.000us     159.000us           0 b           0 b             1  
+-----------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 308.005ms
+
+STUDENT - FUSED ATTENTION statistics
+cpu time:  307.952ms
+mem usage:  1692380 bytes
+
+Errors:
+STAGE:2023-12-04 23:19:19 134438:134438 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:19:19 134438:134438 ActivityProfilerController.cpp:300] Completed Stage: Collection
+STAGE:2023-12-04 23:19:29 134438:134438 ActivityProfilerController.cpp:294] Completed Stage: Warm Up
+STAGE:2023-12-04 23:19:29 134438:134438 ActivityProfilerController.cpp:300] Completed Stage: Collection

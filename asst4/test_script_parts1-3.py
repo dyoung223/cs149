@@ -3,7 +3,7 @@ import subprocess
 # Define the ranges or lists for N, br, and bc
 
 # Iterate over the values and run the command
-with open(f"output_test.txt", "w") as file:
+with open(f"output_test_parts1-3.txt", "w") as file:
     for N in [1, 3, 101, 500, 1024, 2047, 3111] :
         # Construct the command
         command = f"python3 gpt149.py -N {N} part1"
